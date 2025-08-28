@@ -1,0 +1,602 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 16,
+        "title": "Setup Project Infrastructure",
+        "description": "Initialize the project repository with Next.js, configure development environment, and set up project structure for the baby heartbeat audio generator.",
+        "details": "Create a new Next.js project using the latest version (14.0.3) with TypeScript support. Next.js is preferred over plain React for its server-side rendering capabilities and API routes which will be useful for audio processing. Setup includes:\n1. Initialize with `npx create-next-app@latest baby-heartbeat-generator --typescript`\n2. Configure ESLint and Prettier for code quality\n3. Set up project directory structure:\n   - `/components` - Reusable UI components\n   - `/pages` - Page components and API routes\n   - `/lib` - Utility functions and audio processing\n   - `/public` - Static assets\n   - `/styles` - CSS/SCSS files\n   - `/types` - TypeScript type definitions\n4. Install core dependencies:\n   - `wavesurfer.js` (v6.6.3) for audio visualization\n   - `axios` (v1.6.2) for API requests\n   - `tailwindcss` (v3.3.5) for responsive styling\n5. Configure environment variables for development/production\n6. Set up Git repository with appropriate .gitignore",
+        "testStrategy": "Verify project structure is correctly set up. Run development server with `npm run dev` and ensure it starts without errors. Validate TypeScript configuration with `npm run type-check`. Test that all installed dependencies work as expected by creating simple test components.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Implement Responsive UI Layout",
+        "description": "Create responsive UI layout and core components for the web application that works across mobile and desktop devices.",
+        "details": "Implement responsive UI using Tailwind CSS (v3.3.5) and Next.js components:\n1. Create base layout component with header, main content area, and footer\n2. Implement responsive navigation with mobile menu toggle\n3. Design homepage with clear sections for:\n   - Hero section explaining the service\n   - BPM input section\n   - File upload area\n   - Audio preview player\n   - Pricing information\n4. Create reusable UI components:\n   - Button component with primary/secondary/tertiary variants\n   - Input fields with validation\n   - Audio player component shell (functionality to be added later)\n   - File upload component shell\n   - Modal component for messages and confirmations\n5. Implement responsive breakpoints following Tailwind defaults:\n   - Mobile: 0-640px\n   - Tablet: 641-768px\n   - Laptop: 769-1024px\n   - Desktop: 1025px+\n6. Ensure accessibility compliance with WCAG 2.1 AA standards\n7. Implement loading states and skeleton screens for async operations",
+        "testStrategy": "Test responsive layout across different device sizes using Chrome DevTools. Verify that all UI components render correctly and maintain proper spacing/alignment. Run Lighthouse accessibility audit to ensure WCAG compliance. Test tab navigation and screen reader compatibility. Validate that the layout matches design requirements across breakpoints.",
+        "priority": "high",
+        "dependencies": [
+          16
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Develop BPM Input Interface",
+        "description": "Create an interface for users to input or adjust BPM (beats per minute) values for the baby heartbeat audio.",
+        "status": "done",
+        "dependencies": [
+          17
+        ],
+        "priority": "high",
+        "details": "Implement a BPM input interface with the following features:\n1. Create a numeric input field with validation for BPM range (60-200 for fetal heartbeats)\n2. Add increment/decrement buttons for easy adjustment\n3. Implement a slider component as an alternative input method\n4. Display real-time BPM validation with visual feedback\n5. Implement modern, responsive UI with gradient styling\n6. Add audio player with play/pause controls\n7. Display processing status indicators\n8. Connect to backend API endpoint `/api/process-audio` for BPM processing\n9. Support audio generation with realistic heartbeat simulation:\n   - Sine wave generation with multiple harmonics\n   - Realistic heartbeat simulation with main and secondary beats\n   - Noise addition for authenticity\n   - Proper WAV file format with 44.1kHz sample rate\n   - BPM-based frequency calculation (BPM/60 = Hz)",
+        "testStrategy": "Test input validation by entering values outside acceptable ranges (60-200 BPM). Verify that slider and numeric input stay synchronized. Test increment/decrement buttons functionality. Verify the audio player controls work properly. Test API integration by confirming generated WAV files (approximately 176KB) are properly created and displayed. Ensure the component correctly updates when BPM changes. Test with screen readers and keyboard navigation for accessibility. Verify processing status indicators accurately reflect the current state.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement frontend BPM input components",
+            "description": "Create interactive BPM slider (60-200 BPM range), numeric input field for precise control, and real-time BPM display with validation",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design responsive UI",
+            "description": "Implement modern, responsive UI with gradient styling, audio player controls, and processing status indicators",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop backend API endpoint",
+            "description": "Create `/api/process-audio` endpoint for BPM processing with error handling and validation",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement audio generation functionality",
+            "description": "Develop realistic heartbeat simulation with sine wave generation, multiple harmonics, secondary beats, and noise addition",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure WAV file output",
+            "description": "Set up proper WAV file format with 44.1kHz sample rate and appropriate headers for 2-second sample audio generation",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement file upload functionality",
+            "description": "Add capability for users to upload audio files for BPM processing",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Develop ultrasound audio processing",
+            "description": "Create specialized processing for ultrasound audio files to extract and enhance heartbeat sounds",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Implement File Upload for Ultrasound Audio",
+        "description": "Create a file upload system that allows users to upload ultrasound audio files in supported formats (MP3, WAV, M4A), building upon the successful implementation of ultrasound image upload and BPM detection.",
+        "status": "done",
+        "dependencies": [
+          17
+        ],
+        "priority": "high",
+        "details": "Implement a secure and user-friendly file upload system for ultrasound audio files:\n1. Use `react-dropzone` (v14.2.3) to create a drag-and-drop upload area similar to the existing image upload interface\n2. Implement file validation:\n   - Restrict to audio formats: MP3, WAV, M4A\n   - Set maximum file size limit to 50MB as per requirements\n   - Validate MIME types server-side for security\n3. Create progress indicator for upload process\n4. Implement error handling for:\n   - Invalid file types\n   - Files exceeding size limit\n   - Upload failures\n   - Network interruptions\n5. Create Next.js API route at `/api/upload-audio` to handle audio file uploads\n6. Use `formidable` (v3.5.0) for server-side file parsing\n7. Store uploaded files temporarily in memory or in a temporary directory\n8. Return a unique identifier for the uploaded file to be used in subsequent processing\n9. Add option to record audio directly from microphone as an alternative using `MediaRecorder` API\n10. Implement file preview with audio player before upload confirmation\n11. Ensure seamless integration with the existing image upload and BPM detection workflow\n12. Provide clear user feedback and status indicators during audio processing\n13. Implement fallback options for manual input when audio processing fails\n14. Maintain consistent UI/UX with the existing image upload functionality",
+        "testStrategy": "Test uploading audio files of various formats (MP3, WAV, M4A) to verify format validation. Test uploading files larger than 50MB to verify size restriction. Test drag-and-drop functionality and manual file selection. Verify progress indicator accuracy. Test error handling by intentionally causing various error conditions. Verify that uploaded files are correctly stored and accessible for processing. Test microphone recording functionality across different browsers. Verify seamless integration with existing image upload and BPM detection workflow. Test the audio preview functionality before upload confirmation. Verify that the user experience remains consistent between image and audio upload processes.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Adapt existing image upload UI for audio files",
+            "description": "Modify the successful image upload interface to support audio file uploads while maintaining consistent design and user experience.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement audio file validation",
+            "description": "Add validation for MP3, WAV, and M4A formats with 50MB size limit, following the pattern established for image validation.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create audio preview component",
+            "description": "Develop an audio player component that allows users to preview uploaded audio files before confirmation.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement `/api/upload-audio` endpoint",
+            "description": "Create a dedicated API endpoint for audio file uploads with proper validation and error handling.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add microphone recording functionality",
+            "description": "Implement direct audio recording from microphone using the MediaRecorder API as an alternative to file upload.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Integrate with existing BPM workflow",
+            "description": "Ensure audio upload functionality works seamlessly with the existing BPM detection and audio generation process.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Develop Audio Processing Engine",
+        "description": "Create the core audio processing engine that can match sample audio to specified BPM and process ultrasound files.",
+        "details": "Implement a robust audio processing engine using Web Audio API and server-side processing:\n1. Client-side processing with Web Audio API for real-time preview:\n   - Create AudioContext and necessary nodes\n   - Implement BPM detection algorithm using autocorrelation\n   - Create tempo adjustment functionality without pitch shifting\n2. Server-side processing for higher quality using:\n   - FFmpeg (v6.0) for audio manipulation via `fluent-ffmpeg` (v2.1.2)\n   - Node.js streams for efficient processing\n3. Implement BPM detection algorithm:\n   - Use `aubio` library via Node.js bindings or\n   - Implement custom algorithm using onset detection and peak finding\n4. Create tempo matching functionality:\n   - Time-stretching without pitch modification\n   - Beat alignment and normalization\n5. Implement audio quality preservation techniques:\n   - Use high-quality resampling algorithms\n   - Maintain original bit depth and sample rate where possible\n6. Create processing queue system for handling multiple requests\n7. Implement caching mechanism for processed audio to improve performance\n8. Add error handling and fallback mechanisms for processing failures\n9. Create logging system to track processing metrics and errors",
+        "testStrategy": "Test BPM detection with various sample files to measure accuracy. Compare processed audio quality against original to ensure minimal degradation. Measure processing time to ensure it meets the 30-second requirement. Test with edge cases (very low/high BPM, poor quality audio). Verify that the system gracefully handles processing failures. Test concurrent processing to ensure stability under load.",
+        "priority": "high",
+        "dependencies": [
+          18,
+          19
+        ],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Client-side Web Audio API Foundation",
+            "description": "Set up the client-side audio processing infrastructure using Web Audio API for real-time preview functionality.",
+            "dependencies": [],
+            "details": "1. Create AudioContext and necessary audio nodes (GainNode, AnalyserNode, etc.)\n2. Implement audio file loading and decoding functionality\n3. Set up audio buffer management for processing\n4. Create basic audio playback controls (play, pause, stop)\n5. Implement volume control and basic audio visualization\n6. Add error handling for unsupported browsers or audio formats\n7. Create utility functions for audio data manipulation",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop BPM Detection Algorithm",
+            "description": "Implement algorithms for detecting beats per minute in audio files using both client and server-side approaches.",
+            "dependencies": [
+              "20.1"
+            ],
+            "details": "1. Research and evaluate BPM detection techniques (autocorrelation, onset detection)\n2. Implement client-side BPM detection using Web Audio API and autocorrelation\n3. Set up server-side BPM detection using aubio library via Node.js bindings\n4. Create fallback algorithm using custom onset detection and peak finding\n5. Implement accuracy improvement techniques (filtering, normalization)\n6. Add confidence scoring for BPM detection results\n7. Create test suite with sample files of known BPM values\n8. Optimize algorithm for performance",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Tempo Matching and Audio Quality Preservation",
+            "description": "Create functionality to adjust audio tempo to match specified BPM while preserving audio quality.",
+            "dependencies": [
+              "20.1",
+              "20.2"
+            ],
+            "details": "1. Implement time-stretching algorithm without pitch modification\n2. Create beat alignment and normalization functionality\n3. Implement high-quality resampling algorithms\n4. Add functionality to maintain original bit depth and sample rate\n5. Create audio quality comparison metrics\n6. Implement phase vocoder technique for higher quality time-stretching\n7. Add parameters for quality vs. processing speed tradeoffs\n8. Create A/B testing functionality for quality assessment",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Integrate Server-side FFmpeg Processing",
+            "description": "Set up server-side audio processing using FFmpeg for high-quality audio manipulation.",
+            "dependencies": [
+              "20.2",
+              "20.3"
+            ],
+            "details": "1. Set up FFmpeg (v6.0) with necessary codecs and libraries\n2. Implement fluent-ffmpeg (v2.1.2) integration for Node.js\n3. Create audio processing pipeline using Node.js streams\n4. Implement command generation for tempo adjustment\n5. Add audio format conversion functionality\n6. Create progress tracking for long-running processes\n7. Implement error handling and recovery mechanisms\n8. Add logging for FFmpeg operations and performance metrics",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Develop Processing Queue System",
+            "description": "Create a queue system to manage multiple audio processing requests efficiently.",
+            "dependencies": [
+              "20.4"
+            ],
+            "details": "1. Design queue data structure for processing requests\n2. Implement priority-based processing for premium users\n3. Create worker processes for parallel processing\n4. Add rate limiting to prevent system overload\n5. Implement job status tracking and notification\n6. Create retry mechanism for failed processing jobs\n7. Add queue monitoring and management interface\n8. Implement graceful shutdown and recovery procedures",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Caching and Optimization Strategies",
+            "description": "Create caching mechanisms and optimization strategies to improve performance of the audio processing engine.",
+            "dependencies": [
+              "20.3",
+              "20.4",
+              "20.5"
+            ],
+            "details": "1. Design caching strategy for processed audio files\n2. Implement file-based cache with TTL (Time To Live)\n3. Create cache invalidation mechanisms\n4. Add memory caching for frequently accessed audio segments\n5. Implement processing result deduplication\n6. Create performance metrics collection and analysis\n7. Add adaptive processing based on server load\n8. Implement resource usage optimization techniques",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "Implement Real-time Audio Preview",
+        "description": "Create functionality for users to preview generated audio in real-time before purchasing or sharing.",
+        "status": "done",
+        "dependencies": [
+          20
+        ],
+        "priority": "medium",
+        "details": "Implement an interactive audio preview system:\n1. Create custom audio player component for visualization:\n   - Play/pause controls\n   - Volume adjustment\n   - Progress indicator\n2. Implement real-time audio processing for preview:\n   - Connect to Web Audio API for client-side processing\n   - Generate 3-second preview samples with whisper overlay\n3. Add whisper overlay functionality:\n   - Implement audio mixing using Web Audio API's GainNode (70% heartbeat + 30% whisper)\n   - Balance levels between heartbeat and whisper\n4. Implement audio buffering to prevent playback interruptions\n5. Add visual feedback during audio generation/processing\n6. Add clear labeling for free sample (\"Free Sample (3 seconds with whisper overlay)\")\n7. Add premium upgrade CTA with pricing ($4.99 for full version)\n8. Add download prevention for preview audio:\n   - Disable right-click save\n   - Stream audio rather than providing direct file URL\n9. Optimize for mobile playback with appropriate UI controls\n10. Implement BPM-based audio generation with realistic heartbeat patterns\n11. Generate high-quality WAV output (258KB for 3-second sample)\n12. Implement proper error handling and validation",
+        "testStrategy": "Test audio playback across different browsers and devices. Verify that play/pause and volume controls work correctly. Verify that whisper overlay is correctly applied at 30% mix level. Test download prevention measures. Measure time from processing request to playback start to ensure it's acceptable. Test with various network conditions to ensure buffering works correctly. Verify that the sample audio section appears after main audio generation. Test the \"Create Free Sample\" button with loading states. Verify that the premium upgrade CTA displays correctly with the $4.99 price point. Test BPM-based audio generation for accuracy and realism.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Sample Audio Generation API",
+            "description": "Create /api/create-sample endpoint for generating 3-second samples with whisper overlay",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement BPM-based Audio Generation",
+            "description": "Create realistic heartbeat patterns based on user-selected BPM",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Audio Mixing",
+            "description": "Mix heartbeat (70%) and whisper overlay (30%) using Web Audio API",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Sample Audio UI Components",
+            "description": "Implement UI for sample audio section with 'Create Free Sample' button and loading states",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Audio Player Controls",
+            "description": "Create audio player with play/pause controls for the sample audio",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add Premium Upgrade CTA",
+            "description": "Add clear pricing ($4.99) and call-to-action for premium version upgrade",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement Social Media Sharing",
+            "description": "Add Facebook, Twitter, and Instagram sharing functionality with custom text",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Freemium Model",
+            "description": "Restrict download functionality for free samples (preview only)",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Integrate Real Whisper Audio File",
+            "description": "Replace simulated whisper overlay with actual whisper audio file",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Optimize Audio Processing Performance",
+            "description": "Improve loading times and reduce server load for sample generation",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "Implement Social Media Sharing",
+        "description": "Create functionality for users to share 3-second sample audio on social media platforms (Facebook, Twitter, Instagram).",
+        "details": "Implement comprehensive social sharing functionality:\n1. Generate shareable links with unique identifiers for each audio sample\n2. Create Open Graph and Twitter Card metadata for rich previews:\n   - Title, description, and image for the shared content\n   - Audio player embed where supported\n3. Implement sharing buttons using `react-share` (v4.4.1) for:\n   - Facebook\n   - Twitter\n   - Instagram (direct users to Instagram Stories with download prompt)\n   - WhatsApp\n   - Email\n4. Create server-side API endpoint to generate temporary public URLs for shared audio\n5. Implement analytics tracking for shared content using custom events\n6. Add copy-to-clipboard functionality for direct link sharing\n7. Create QR code generation for easy mobile sharing using `qrcode.react` (v3.1.0)\n8. Implement rate limiting to prevent abuse of sharing functionality\n9. Add option to include personalized message with shared content\n10. Create landing page for users who click on shared links",
+        "testStrategy": "Test sharing functionality on each platform to verify correct preview generation. Verify that shared links correctly load the audio sample. Test analytics tracking to ensure share events are recorded. Verify that rate limiting prevents abuse. Test QR code generation and scanning. Verify that the landing page correctly displays shared content. Test with various devices and browsers to ensure compatibility.",
+        "priority": "medium",
+        "dependencies": [
+          21
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Setup Supabase Authentication",
+        "description": "Implement user registration and authentication system using Supabase for secure access to the application.",
+        "details": "Implement authentication system using Supabase (latest version):\n1. Set up Supabase project and configure authentication settings:\n   - Enable email/password authentication\n   - Configure OAuth providers (Google, Facebook) for social login\n   - Set up email templates for verification and password reset\n2. Install and configure Supabase client:\n   - `@supabase/supabase-js` (v2.38.4)\n   - `@supabase/auth-helpers-nextjs` (v0.8.7) for Next.js integration\n3. Create authentication UI components:\n   - Registration form with email verification\n   - Login form with remember me option\n   - Password reset functionality\n   - Social login buttons\n4. Implement protected routes using Next.js middleware\n5. Create user profile management:\n   - Profile information update\n   - Password change\n   - Account deletion\n6. Set up session management and token refresh\n7. Implement security measures:\n   - CSRF protection\n   - Rate limiting for login attempts\n   - Account lockout after failed attempts\n8. Create admin interface for user management (optional)\n9. Implement logging for authentication events",
+        "testStrategy": "Test user registration flow including email verification. Test login with valid and invalid credentials. Verify password reset functionality. Test social login providers. Verify that protected routes correctly redirect unauthenticated users. Test session expiration and renewal. Verify that rate limiting prevents brute force attacks. Test account management functions (profile update, password change, deletion).",
+        "priority": "high",
+        "dependencies": [
+          16,
+          17
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Setup Supabase Database Schema",
+        "description": "Design and implement the database schema in Supabase for storing user data, audio files, and transaction records.",
+        "details": "Create a comprehensive database schema in Supabase:\n1. Design and create the following tables:\n   - `users` (extends Supabase auth.users):\n     - Additional profile fields (name, preferences)\n     - Account status and type (free/premium)\n   - `audio_files`:\n     - File metadata (original filename, format, size)\n     - Processing status and parameters\n     - BPM information\n     - Storage references\n     - Created/updated timestamps\n     - User relationship\n   - `transactions`:\n     - Payment details (amount, currency, status)\n     - Product information\n     - Transaction dates\n     - User relationship\n     - Payment provider reference\n   - `downloads`:\n     - Download timestamps\n     - IP address (hashed for privacy)\n     - User relationship\n     - File relationship\n2. Set up relationships between tables using foreign keys\n3. Implement Row Level Security (RLS) policies for data protection\n4. Create database indexes for performance optimization\n5. Set up database triggers for automated actions\n6. Implement database functions for complex operations\n7. Configure database backups and recovery procedures\n8. Create migration scripts for schema updates",
+        "testStrategy": "Verify that all tables are created with correct columns and relationships. Test RLS policies to ensure proper data isolation. Verify that indexes improve query performance. Test database triggers with sample data. Verify that database functions return expected results. Test backup and recovery procedures. Verify that migration scripts correctly update the schema.",
+        "priority": "high",
+        "dependencies": [
+          23
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Implement Supabase Storage for Audio Files",
+        "description": "Set up Supabase Storage for securely storing and retrieving user-uploaded ultrasound files and generated audio.",
+        "details": "Configure Supabase Storage for efficient audio file management:\n1. Create storage buckets with appropriate permissions:\n   - `uploads` - For temporary storage of user uploads\n   - `processed` - For storing processed audio files\n   - `samples` - For storing free sample audio files\n2. Implement secure access policies using Supabase RLS:\n   - Restrict access to user's own files\n   - Allow public access to shared samples\n   - Set appropriate CORS policies\n3. Create file management utilities:\n   - Upload function with progress tracking\n   - Download function with authentication check\n   - File deletion and cleanup\n4. Implement file naming convention and organization:\n   - Use UUID for file names to prevent collisions\n   - Organize files by user ID and date\n5. Set up file metadata storage in database linked to storage objects\n6. Implement file transformation hooks for automatic processing\n7. Configure storage lifecycle policies:\n   - Auto-delete temporary uploads after 24 hours\n   - Archive old files to cold storage\n8. Implement file encryption for sensitive data\n9. Create backup strategy for critical files",
+        "testStrategy": "Test file upload and download functionality with various file types and sizes. Verify that access policies correctly restrict unauthorized access. Test file organization and naming conventions. Verify that lifecycle policies correctly manage file retention. Test file encryption and decryption. Verify that backups can be successfully restored. Test concurrent uploads to ensure system stability.",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Implement Payment Processing Integration",
+        "description": "Integrate a secure payment processing system to enable premium audio downloads and manage transactions.",
+        "details": "Implement payment processing using Stripe (latest API version):\n1. Set up Stripe account and configure webhook endpoints\n2. Install and configure Stripe libraries:\n   - `@stripe/stripe-js` (v2.1.7) for frontend\n   - `stripe` (v14.5.0) for backend\n3. Create payment UI components:\n   - Checkout form with credit card input\n   - Payment summary and confirmation\n   - Receipt generation\n4. Implement server-side payment processing:\n   - Create payment intent API\n   - Process webhook events\n   - Handle successful payments\n   - Manage refunds and disputes\n5. Set up products and pricing in Stripe dashboard:\n   - Single purchase option\n   - Subscription option (if applicable)\n6. Implement secure payment flow:\n   - Use Stripe Elements for PCI compliance\n   - Implement 3D Secure authentication\n   - Handle payment errors gracefully\n7. Create transaction recording in Supabase database\n8. Implement receipt generation and email delivery\n9. Add analytics tracking for conversion rates\n10. Implement test mode for development",
+        "testStrategy": "Test payment flow with Stripe test cards for successful and failed scenarios. Verify that webhooks correctly update transaction status. Test 3D Secure authentication flow. Verify that receipts are correctly generated and delivered. Test refund process. Verify that transaction records are correctly stored in the database. Test payment form validation and error handling. Verify PCI compliance using Stripe's recommended practices.",
+        "priority": "high",
+        "dependencies": [
+          24,
+          25
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Stripe account and configure libraries",
+            "description": "Create and configure a Stripe account, set up webhook endpoints, and install necessary Stripe libraries for both frontend and backend.",
+            "dependencies": [],
+            "details": "1. Create a Stripe account for the application\n2. Configure webhook endpoints in the Stripe dashboard\n3. Set up webhook secret keys for verification\n4. Install @stripe/stripe-js (v2.1.7) for frontend integration\n5. Install stripe (v14.5.0) for backend integration\n6. Create environment variables for Stripe API keys\n7. Initialize Stripe in the application\n8. Set up test mode configuration for development",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop payment UI components",
+            "description": "Create user interface components for the payment process including checkout form, payment summary, and confirmation screens.",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "1. Create a checkout form component with Stripe Elements\n2. Implement credit card input field using Stripe Elements for PCI compliance\n3. Build payment summary component showing item details and total\n4. Design confirmation screen for successful payments\n5. Create loading states for payment processing\n6. Implement error handling UI for payment failures\n7. Design responsive layout for payment components\n8. Add form validation for required fields",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement server-side payment processing",
+            "description": "Develop backend functionality to handle payment intents, process webhook events, and manage payment lifecycle.",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "1. Create API endpoint for generating payment intents\n2. Implement webhook handler for Stripe events\n3. Set up event handlers for payment_intent.succeeded\n4. Implement handlers for payment_intent.failed\n5. Create refund processing functionality\n6. Set up dispute handling\n7. Configure products and pricing in Stripe dashboard\n8. Implement 3D Secure authentication flow\n9. Add error logging for payment failures",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create transaction recording and receipt system",
+            "description": "Implement database storage for transaction records and develop receipt generation and delivery functionality.",
+            "dependencies": [
+              "26.3"
+            ],
+            "details": "1. Design transaction schema in Supabase database\n2. Create API for recording successful transactions\n3. Implement receipt generation using HTML templates\n4. Set up PDF generation for receipts\n5. Configure email delivery system for receipts\n6. Create transaction history view for user accounts\n7. Implement analytics tracking for payment conversions\n8. Set up reporting for transaction metrics",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement security measures and testing",
+            "description": "Ensure payment processing meets security standards, implement comprehensive testing, and add error handling throughout the payment flow.",
+            "dependencies": [
+              "26.2",
+              "26.3",
+              "26.4"
+            ],
+            "details": "1. Implement HTTPS for all payment-related requests\n2. Set up CORS policies for payment endpoints\n3. Create test suite using Stripe test cards\n4. Test successful payment flows\n5. Test failed payment scenarios\n6. Verify webhook handling with test events\n7. Test 3D Secure authentication\n8. Implement rate limiting for payment attempts\n9. Add comprehensive error handling throughout payment flow\n10. Document payment integration for team reference",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "title": "Implement Premium Audio Generation",
+        "description": "Create functionality to generate full 8-second premium audio files without whisper overlay for paying customers.",
+        "details": "Implement premium audio generation system:\n1. Extend the audio processing engine to support 8-second generation:\n   - Modify time-stretching algorithms for longer duration\n   - Implement beat consistency across longer samples\n   - Remove whisper overlay for premium versions\n2. Create high-quality export options:\n   - MP3 (320kbps)\n   - WAV (16-bit/44.1kHz)\n   - M4A (AAC 256kbps)\n3. Implement audio enhancement for premium files:\n   - Noise reduction using FFT filtering\n   - Dynamic range compression for consistent volume\n   - Subtle EQ adjustments for clarity\n4. Create metadata embedding in audio files:\n   - Title and description\n   - Generation date\n   - BPM information\n   - Unique identifier (non-personally identifiable)\n5. Implement secure file delivery system:\n   - Generate signed URLs with expiration\n   - Track download attempts\n   - Limit download attempts per purchase\n6. Create background processing queue for premium generation:\n   - Use worker threads or separate service\n   - Implement priority queue for paying customers\n7. Add notification system for completed processing",
+        "testStrategy": "Compare audio quality between free and premium versions to verify enhancements. Test generation of all supported export formats. Verify that metadata is correctly embedded in files. Test secure delivery system with valid and expired links. Verify download tracking and limitations. Test processing queue under load to ensure stability. Measure processing time to ensure it meets requirements. Test notification system for various scenarios.",
+        "priority": "medium",
+        "dependencies": [
+          20,
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Create User Dashboard",
+        "description": "Develop a user dashboard for managing account information, viewing purchase history, and accessing downloaded audio files.",
+        "details": "Implement comprehensive user dashboard:\n1. Create dashboard layout with navigation sections:\n   - Account overview\n   - Audio library\n   - Purchase history\n   - Settings\n2. Implement account overview section:\n   - User profile information\n   - Account status\n   - Quick actions\n3. Create audio library component:\n   - List of generated/purchased audio files\n   - Preview and download options\n   - Sorting and filtering capabilities\n   - Batch actions (download, delete)\n4. Implement purchase history section:\n   - Transaction list with details\n   - Receipt download options\n   - Payment method information\n5. Create settings section:\n   - Profile information update\n   - Password change\n   - Notification preferences\n   - Account deletion\n6. Implement responsive design for all dashboard components\n7. Add data loading states and pagination for performance\n8. Create dashboard analytics for user engagement\n9. Implement real-time updates using Supabase subscriptions",
+        "testStrategy": "Test dashboard navigation and layout across devices. Verify that all sections display correct user data. Test audio library functionality including preview and download. Verify that purchase history correctly displays all transactions. Test settings functionality including profile updates and password changes. Verify that pagination works correctly with large datasets. Test real-time updates when new data is available. Verify that the dashboard is accessible and meets WCAG standards.",
+        "priority": "medium",
+        "dependencies": [
+          23,
+          24,
+          25,
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Implement Error Handling and Monitoring",
+        "description": "Create a comprehensive error handling system and implement monitoring to ensure system reliability and performance.",
+        "details": "Implement robust error handling and monitoring:\n1. Create global error boundary in React application\n2. Implement structured error handling for:\n   - API requests\n   - File operations\n   - Audio processing\n   - Payment transactions\n3. Create user-friendly error messages and recovery options\n4. Implement logging system using a service like Sentry (latest version):\n   - Error tracking with context\n   - Performance monitoring\n   - User session replay\n5. Create custom error types for different scenarios\n6. Implement retry mechanisms for transient failures\n7. Set up alerting for critical errors:\n   - Email notifications\n   - Slack/Discord integration\n8. Create admin dashboard for error monitoring\n9. Implement performance tracking:\n   - Page load times\n   - API response times\n   - Audio processing duration\n10. Set up uptime monitoring using a service like Uptime Robot",
+        "testStrategy": "Intentionally trigger various error conditions to verify handling. Test retry mechanisms with simulated transient failures. Verify that error messages are user-friendly and provide recovery options. Test logging system to ensure errors are properly captured with context. Verify that alerts are triggered for critical errors. Test performance monitoring to ensure metrics are accurately captured. Verify that the admin dashboard correctly displays error and performance data.",
+        "priority": "medium",
+        "dependencies": [
+          16,
+          20,
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Implement Compliance and Legal Requirements",
+        "description": "Ensure the application meets all legal and compliance requirements including GDPR, payment processing standards, and copyright protection.",
+        "details": "Implement comprehensive compliance measures:\n1. Create privacy policy and terms of service documents:\n   - User data collection and usage policies\n   - Payment terms\n   - Copyright and intellectual property rights\n2. Implement GDPR compliance features:\n   - Cookie consent banner using `react-cookie-consent` (v8.0.1)\n   - Data export functionality\n   - Right to be forgotten (account deletion)\n   - Data processing records\n3. Ensure PCI DSS compliance for payment processing:\n   - Use Stripe Elements to avoid handling card data directly\n   - Implement proper data security measures\n   - Regular security scanning\n4. Create data retention and deletion policies:\n   - Automated data purging for inactive accounts\n   - Secure deletion methods\n5. Implement copyright protection for generated audio:\n   - Digital watermarking (inaudible)\n   - Terms of use for downloaded content\n6. Create accessibility compliance (WCAG 2.1 AA):\n   - Semantic HTML\n   - Proper ARIA attributes\n   - Keyboard navigation\n   - Screen reader compatibility\n7. Implement age verification if required by regulations",
+        "testStrategy": "Review privacy policy and terms of service with legal counsel. Test GDPR compliance features including data export and deletion. Verify that cookie consent works correctly and respects user choices. Test payment processing for PCI DSS compliance. Verify that data retention policies are correctly implemented. Test accessibility using screen readers and keyboard navigation. Conduct a full compliance audit before launch.",
+        "priority": "high",
+        "dependencies": [
+          23,
+          26,
+          28
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Privacy Policy and Terms of Service Documents",
+            "description": "Draft comprehensive legal documents covering user data policies, payment terms, and intellectual property rights.",
+            "dependencies": [],
+            "details": "1. Research legal requirements for privacy policies in key markets (EU, US, etc.)\n2. Draft privacy policy covering:\n   - Data collection practices\n   - Data storage and security measures\n   - User rights regarding their data\n   - Third-party data sharing policies\n3. Draft terms of service covering:\n   - User obligations and restrictions\n   - Payment terms and refund policies\n   - Copyright and intellectual property ownership\n   - Limitation of liability\n4. Create user-friendly summaries of both documents\n5. Implement document versioning system\n6. Have documents reviewed by legal counsel",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement GDPR Compliance Features",
+            "description": "Develop technical features required for GDPR compliance including consent management, data export, and account deletion.",
+            "dependencies": [
+              "30.1"
+            ],
+            "details": "1. Implement cookie consent banner using `react-cookie-consent` v8.0.1:\n   - Create configurable banner component\n   - Implement cookie categories (necessary, functional, analytics)\n   - Store user preferences and respect them across sessions\n2. Develop data export functionality:\n   - Create API endpoint for requesting data export\n   - Generate comprehensive JSON export of user data\n   - Implement secure download mechanism\n3. Implement right to be forgotten (account deletion):\n   - Create account deletion workflow\n   - Implement data purging from all systems\n   - Provide confirmation of deletion\n4. Create data processing records system:\n   - Log all data processing activities\n   - Implement data processing audit trail",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Ensure PCI DSS Compliance for Payment Processing",
+            "description": "Implement payment processing systems that comply with PCI DSS standards to securely handle customer payment information.",
+            "dependencies": [
+              "30.1"
+            ],
+            "details": "1. Integrate Stripe Elements to avoid direct handling of card data:\n   - Implement Stripe Elements UI components\n   - Configure secure token-based payment processing\n2. Implement proper data security measures:\n   - Ensure TLS 1.2+ for all payment communications\n   - Implement proper error handling that doesn't expose sensitive data\n   - Configure secure headers for payment pages\n3. Set up regular security scanning:\n   - Implement vulnerability scanning schedule\n   - Document security procedures\n   - Create incident response plan for payment data breaches\n4. Ensure payment data is never stored in application databases\n5. Implement proper access controls for payment processing systems",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Data Retention and Copyright Protection",
+            "description": "Develop systems for managing data retention policies and implementing copyright protection for generated audio content.",
+            "dependencies": [
+              "30.2"
+            ],
+            "details": "1. Create data retention policies:\n   - Define retention periods for different data types\n   - Implement automated data purging for inactive accounts\n   - Develop secure deletion methods that ensure complete removal\n2. Implement copyright protection for generated audio:\n   - Research and implement digital watermarking technology (inaudible)\n   - Create metadata embedding for ownership information\n   - Develop terms of use for downloaded content\n3. Create audit system for tracking data lifecycle\n4. Implement user notification system for data retention actions\n5. Develop reporting tools for data retention compliance",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Accessibility Compliance (WCAG 2.1 AA)",
+            "description": "Ensure the application meets WCAG 2.1 AA accessibility standards through proper implementation of semantic HTML, ARIA attributes, and keyboard navigation.",
+            "dependencies": [],
+            "details": "1. Audit existing components for accessibility issues:\n   - Run automated accessibility testing tools\n   - Perform manual testing with screen readers\n2. Implement semantic HTML throughout the application:\n   - Replace generic divs with appropriate semantic elements\n   - Ensure proper heading hierarchy\n3. Add proper ARIA attributes where needed:\n   - Implement aria-labels for interactive elements\n   - Use aria-live regions for dynamic content\n   - Ensure proper focus management\n4. Implement keyboard navigation:\n   - Ensure all interactive elements are keyboard accessible\n   - Create visible focus indicators\n   - Implement skip navigation links\n5. Test with screen readers (NVDA, VoiceOver, JAWS)\n6. Implement color contrast compliance checking",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-27T13:57:03.919Z",
+      "updated": "2025-08-28T03:57:20.967Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

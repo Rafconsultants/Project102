@@ -1,0 +1,189 @@
+# Baby Heartbeat Audio Generator - Product Requirements Document
+
+## Project Overview
+A web application that allows users to generate personalized baby heartbeat audio files by processing ultrasound data and matching it to specific BPM (beats per minute) requirements. The system provides both free samples and premium downloads with integrated payment processing.
+
+## Target Users
+- Expectant parents who want to create personalized baby heartbeat audio
+- Users who want to share baby heartbeat audio on social media
+- Parents looking for unique audio keepsakes
+
+## Core Features
+
+### Phase 1: MVP Development
+**Objective**: Create a working prototype that can process sample audio and match it to user-defined BPM.
+
+**Requirements**:
+- Web interface for BPM input
+- Audio processing engine to match sample audio to specified BPM
+- Real-time audio preview functionality
+- Basic error handling and user feedback
+- Responsive design for mobile and desktop
+
+**Success Criteria**:
+- System can successfully process sample audio and output at specified BPM
+- Web interface is intuitive and responsive
+- Audio quality meets acceptable standards
+- Testing confirms functionality across different BPM ranges
+
+### Phase 2: Ultrasound Integration
+**Objective**: Enable users to upload ultrasound files and automatically detect BPM.
+
+**Requirements**:
+- File upload interface for ultrasound files (common formats: MP3, WAV, M4A)
+- BPM detection algorithm for ultrasound audio
+- Fallback mechanism for BPM detection failures
+- Manual BPM input option with default to 140 BPM
+- Integration with Phase 1 audio processing
+
+**Success Criteria**:
+- System can detect BPM from ultrasound files with 90%+ accuracy
+- Graceful handling of detection failures with clear user messaging
+- Seamless integration with existing audio processing pipeline
+- User-friendly error messages and recovery options
+
+### Phase 3: Audio Sampling and Preview
+**Objective**: Create 3-second sample audio with whisper overlay and social sharing capabilities.
+
+**Requirements**:
+- 3-second audio sampling functionality
+- Whisper audio overlay integration
+- Audio stitching and truncation capabilities
+- Preview player with play/pause controls
+- Social media sharing integration (Facebook, Twitter, Instagram)
+- Download prevention for free samples
+- Audio quality optimization for web playback
+
+**Success Criteria**:
+- Generated samples are exactly 3 seconds with whisper overlay
+- Preview functionality works smoothly across devices
+- Social sharing generates proper previews and links
+- Download protection is effective
+- Audio quality is optimized for web streaming
+
+### Phase 4: Authentication and Payment Integration
+**Objective**: Implement user accounts, payment processing, and database storage using Supabase.
+
+**Requirements**:
+- User registration and authentication system
+- Secure payment processing integration
+- Database schema for user accounts and audio files
+- File storage and retrieval system
+- User dashboard for purchased audio
+- Payment history and receipt generation
+- Security measures for user data protection
+
+**Success Criteria**:
+- Users can create accounts and log in securely
+- Payment processing handles transactions reliably
+- Database stores user data and audio files efficiently
+- User dashboard displays purchase history and downloads
+- System meets security and privacy standards
+
+### Phase 5: Premium Download System
+**Objective**: Enable full 8-second audio downloads for paying users.
+
+**Requirements**:
+- Full 8-second audio generation (no whisper overlay)
+- Secure download system for paid users
+- Audio file management and storage
+- User access control for purchased content
+- Download tracking and analytics
+- Backup and recovery systems
+
+**Success Criteria**:
+- Full audio files are generated correctly without whisper overlay
+- Download system is secure and reliable
+- Users can access their purchased content easily
+- System tracks usage and maintains data integrity
+
+## Technical Requirements
+
+### Frontend
+- React.js or Next.js for web interface
+- Responsive design for mobile and desktop
+- Audio player components
+- File upload interface
+- Payment form integration
+- Social sharing buttons
+
+### Backend
+- Node.js/Express or Python/FastAPI
+- Audio processing library (FFmpeg, librosa, or similar)
+- BPM detection algorithm
+- File storage and management
+- API endpoints for all functionality
+
+### Database (Supabase)
+- User accounts and authentication
+- Audio file metadata storage
+- Payment transaction records
+- User preferences and settings
+
+### Audio Processing
+- BPM detection from ultrasound files
+- Audio tempo matching and adjustment
+- Audio stitching and overlay capabilities
+- Format conversion and optimization
+- Quality control and validation
+
+### Security
+- Secure file upload validation
+- Payment data protection
+- User authentication and authorization
+- API endpoint security
+- Data encryption and privacy compliance
+
+## User Experience Requirements
+
+### Interface Design
+- Clean, intuitive user interface
+- Mobile-responsive design
+- Accessible design standards
+- Clear call-to-action buttons
+- Progress indicators for processing
+
+### User Flow
+1. User uploads ultrasound or selects sample audio
+2. System detects BPM or user inputs manually
+3. User previews generated audio
+4. User can share sample or purchase full version
+5. Payment processing and download delivery
+
+### Error Handling
+- Clear error messages for failed uploads
+- BPM detection failure recovery
+- Payment processing error handling
+- Network connectivity issues
+- File format validation
+
+## Performance Requirements
+- Audio processing under 30 seconds
+- Page load times under 3 seconds
+- Support for files up to 50MB
+- 99% uptime for core functionality
+- Scalable architecture for user growth
+
+## Compliance and Legal
+- GDPR compliance for user data
+- Payment processing compliance (PCI DSS)
+- Copyright protection for generated audio
+- Terms of service and privacy policy
+- Data retention and deletion policies
+
+## Success Metrics
+- User conversion rate from free to paid
+- Audio processing success rate
+- User satisfaction scores
+- Social sharing engagement
+- Payment processing success rate
+- System uptime and performance
+
+## Future Enhancements
+- Multiple whisper voice options
+- Custom audio effects and filters
+- Batch processing for multiple files
+- API access for third-party integrations
+- Mobile app development
+- Advanced audio analytics
+
