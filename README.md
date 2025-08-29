@@ -1,137 +1,102 @@
 # Baby Heartbeat Generator
 
-An AI-powered web application that processes ultrasound images and audio to create personalized baby heartbeat recordings with social sharing capabilities.
+Create personalized baby heartbeat recordings with whisper overlay. Upload ultrasound images for automatic BPM detection, generate 3-second samples, and share on social media.
 
-## 🎯 Features
+## Features
 
-- **Ultrasound Image Upload**: Upload ultrasound images for automatic BPM detection
-- **Audio Processing**: Process ultrasound audio files with BPM adjustment
-- **Baseline Audio Integration**: Uses real baby heartbeat audio for authentic results
-- **Social Media Sharing**: Share your baby's heartbeat on Facebook, Twitter, and Instagram
-- **Freemium Model**: Free 3-second samples with premium 8-second full versions
-- **Multi-step Workflow**: Guided process from image upload to audio generation
+- **Ultrasound BPM Detection**: Upload ultrasound images for automatic BPM detection
+- **Manual BPM Input**: Enter BPM manually or use default 140 BPM
+- **3-Second Sample Creation**: Generate samples with whisper overlay
+- **Social Media Sharing**: Share samples on Facebook, Twitter, and Instagram
+- **Preview Only**: Samples can be previewed but not downloaded without payment
 
-## 🚀 Getting Started
+## Setup
 
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Rafconsultants/Project102.git
-   cd Project102
-   ```
-
-2. **Install dependencies**:
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Start the development server**:
+2. **Add baseline audio file**:
+   - Place `baseline-heartbeat.wav` in the project root
+   - This is the 8-second baseline audio file used for processing
+
+3. **Add whisper audio file (optional)**:
+   - Place `whisper-audio.wav` in the project root
+   - This will replace the simulated whisper audio
+   - If not provided, the system uses simulated whisper audio
+
+4. **Run the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open your browser** and navigate to [http://localhost:3000](http://localhost:3000)
+5. **Open your browser**:
+   - Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 🛠️ Technology Stack
+## Usage
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Audio Processing**: Baseline audio integration (FFmpeg planned)
-- **Image Processing**: Sharp for ultrasound analysis
-- **File Upload**: React Dropzone for drag-and-drop functionality
-- **Project Management**: Taskmaster AI integration
+### Step 1: Upload Ultrasound Image
+1. Click "Choose Image" to upload your ultrasound image
+2. The system will automatically detect the BPM
+3. If detection fails, you can enter the BPM manually or use the default 140 BPM
 
-## 📁 Project Structure
+### Step 2: Create Sample
+1. Click "Create Free Sample" to generate a 3-second sample
+2. The sample combines your baby's heartbeat with a gentle whisper overlay
+3. Preview the sample using the built-in audio player
+4. Share on social media using the provided buttons
 
+## Audio Files
+
+### Required Files
+- `baseline-heartbeat.wav`: 8-second baseline heartbeat audio file
+
+### Optional Files
+- `whisper-audio.wav`: Actual whisper audio file (replaces simulated whisper)
+
+## Technical Details
+
+- **Frontend**: Next.js 15 with TypeScript and Tailwind CSS
+- **Audio Processing**: Custom WAV processing with JavaScript
+- **BPM Detection**: Computer vision analysis using Sharp
+- **Social Sharing**: Direct integration with Facebook, Twitter, and Instagram APIs
+
+## Security Features
+
+- **Download Prevention**: Audio files are served with `inline` disposition
+- **Context Menu Disabled**: Right-click context menu is disabled on audio players
+- **Keyboard Shortcuts Blocked**: Download shortcuts (Ctrl+S, Cmd+S) are prevented
+- **Controls Restricted**: Audio controls are limited to prevent downloads
+
+## Next Steps
+
+- [ ] Add actual whisper audio file
+- [ ] Implement payment processing for full downloads
+- [ ] Add user authentication
+- [ ] Implement premium features
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
-Project102/
-├── src/
-│   ├── app/
-│   │   ├── api/                    # API endpoints
-│   │   │   ├── detect-bpm/         # BPM detection from images
-│   │   │   ├── process-audio/      # Audio processing
-│   │   │   ├── upload-audio/       # Audio file upload
-│   │   │   └── create-sample/      # Sample generation
-│   │   ├── layout.tsx              # Root layout
-│   │   └── page.tsx                # Main application page
-│   └── ...
-├── .taskmaster/                    # Taskmaster configuration
-├── baseline-heartbeat.wav          # Baseline audio file
-└── uploads/                        # User uploaded files
-```
 
-## 🎵 Audio Processing
+## API Endpoints
 
-The application uses a real 8-second baby heartbeat audio file as the baseline and can:
-- Adjust tempo to match detected BPM
-- Create 3-second samples with whisper overlay
-- Generate high-quality WAV output
-- Support multiple audio formats (MP3, WAV, M4A)
+- `POST /api/detect-bpm`: Detect BPM from uploaded ultrasound image
+- `POST /api/create-sample-baseline`: Create 3-second sample with whisper overlay
 
-## 📱 Social Features
+## License
 
-- **Facebook Sharing**: Share with custom text and BPM information
-- **Twitter Integration**: Tweet with hashtags and app branding
-- **Instagram Support**: Copy link for stories and posts
-- **Viral Content**: "Listen to my baby's heartbeat at [BPM] BPM! ❤️"
-
-## 🔧 Development
-
-### API Endpoints
-
-- `POST /api/detect-bpm` - Detect BPM from ultrasound images
-- `POST /api/process-audio` - Process audio with BPM adjustment
-- `POST /api/upload-audio` - Handle audio file uploads
-- `POST /api/create-sample` - Generate 3-second samples
-
-### Environment Variables
-
-Create a `.env.local` file with:
-```env
-# Add any required environment variables here
-```
-
-## 🚀 Deployment
-
-The application is ready for deployment on:
-- **Vercel** (recommended for Next.js)
-- **Netlify**
-- **AWS Amplify**
-- Any Node.js hosting platform
-
-## 📊 Project Management
-
-This project uses Taskmaster AI for:
-- Task tracking and management
-- Progress monitoring
-- Feature planning
-- Development workflow optimization
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Review the Taskmaster tasks for current development status
-
----
-
-**Built with ❤️ for expecting parents everywhere**
+This project is proprietary software. All rights reserved.

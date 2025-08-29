@@ -2,16 +2,12 @@
 
 import { useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { audioProcessor, AudioProcessingOptions } from '../utils/audioProcessor';
 
 export default function Home() {
-  const [bpm, setBpm] = useState(120);
+  const [bpm, setBpm] = useState(140);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCreatingSample, setIsCreatingSample] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [sampleAudioUrl, setSampleAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPlayingSample, setIsPlayingSample] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadedAudio, setUploadedAudio] = useState<string | null>(null);
   const [isDetectingBpm, setIsDetectingBpm] = useState(false);
@@ -22,10 +18,8 @@ export default function Home() {
     message: string;
   } | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'image' | 'audio' | 'process'>('image');
-  const [showSampleSection, setShowSampleSection] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'image' | 'audio' | 'adjust'>('image');
   const audioRef = useRef<HTMLAudioElement>(null);
-  const sampleAudioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Audio dropzone configuration
@@ -117,7 +111,7 @@ export default function Home() {
 
       if (response.ok) {
         const result = await response.json();
-        setCurrentStep('process');
+        setCurrentStep('adjust');
       } else {
         console.error('Failed to upload audio');
         alert('Failed to upload audio file. Please try again.');
@@ -144,120 +138,29 @@ export default function Home() {
   const handleProcessAudio = async () => {
     setIsProcessing(true);
     try {
-      console.log(`Starting audio processing for BPM: ${bpm}`);
-      
-      // Test 1: Check if baseline audio endpoint is accessible
-      console.log('Step 1: Testing baseline audio endpoint...');
-      const response = await fetch('/api/baseline-audio');
-      if (!response.ok) {
-        throw new Error(`Failed to load baseline audio: ${response.status} ${response.statusText}`);
+      const response = await fetch('/api/process-audio-baseline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bpm: bpm,
+        }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+      } else {
+        console.error('Failed to process audio');
+        alert('Failed to process audio. Please try again.');
       }
-      
-      console.log('Step 2: Loading baseline audio blob...');
-      const audioBlob = await response.blob();
-      console.log(`Loaded baseline audio blob: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
-      
-      if (audioBlob.size === 0) {
-        throw new Error('Baseline audio blob is empty');
-      }
-      
-      console.log('Step 3: Creating audio file...');
-      const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
-      console.log(`Created audio file: ${audioFile.name}, size: ${audioFile.size}, type: ${audioFile.type}`);
-      
-      // Test 4: Verify audio file is valid
-      if (audioFile.size === 0) {
-        throw new Error('Audio file is empty');
-      }
-      
-      console.log('Step 4: Processing audio...');
-      // Process the audio with the target BPM and 8-second duration
-      const options: AudioProcessingOptions = {
-        bpm: bpm,
-        targetDuration: 8, // Ensure 8 seconds
-        volume: 1.0
-      };
-      
-      console.log(`Processing options:`, options);
-      const result = await audioProcessor.processAudio(audioFile, options);
-      
-      console.log(`Processing completed:`, result);
-      
-      // Create a blob from the processed audio
-      const processedBlob = new Blob([result.audioBuffer], { type: 'audio/wav' });
-      const url = URL.createObjectURL(processedBlob);
-      setAudioUrl(url);
-      setShowSampleSection(true);
-      
-      console.log(`Processed audio: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
-      console.log(`Original BPM: 140, Target BPM: ${result.bpm}`);
-      console.log(`Expected tempo change: ${result.bpm > 140 ? 'FASTER' : 'SLOWER'}`);
-      
-      // Calculate enhanced effects
-      const baseTempoRatio = (result.bpm/140).toFixed(3);
-      let enhancedTempoRatio = baseTempoRatio;
-      let speedChange = "normal";
-      
-      if (result.bpm > 140) {
-        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 1.3).toFixed(3);
-        speedChange = `${((result.bpm/140 - 1) * 100 * 1.3).toFixed(1)}% faster`;
-      } else if (result.bpm < 140) {
-        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 0.6).toFixed(3);
-        speedChange = `${((1 - result.bpm/140) * 100 * 0.6).toFixed(1)}% slower`;
-      }
-      
-      console.log(`Base Tempo Ratio: ${baseTempoRatio}, Enhanced: ${enhancedTempoRatio}`);
-      console.log(`Speed Change: ${speedChange}`);
-      console.log(`Processed blob size: ${processedBlob.size} bytes`);
-      
-      // Test 5: Verify processed audio
-      if (processedBlob.size === 0) {
-        throw new Error('Processed audio blob is empty');
-      }
-      
-      console.log('✅ Audio processing completed successfully!');
-      
     } catch (error) {
       console.error('Error processing audio:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to process audio: ${errorMessage}`);
+      alert('Error processing audio. Please try again.');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handleCreateSample = async () => {
-    setIsCreatingSample(true);
-    try {
-      // Load the baseline audio file
-      const response = await fetch('/api/baseline-audio');
-      if (!response.ok) {
-        throw new Error('Failed to load baseline audio');
-      }
-      
-      const audioBlob = await response.blob();
-      const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
-      
-      // Create a 3-second sample with whisper overlay effect
-      const options: AudioProcessingOptions = {
-        bpm: bpm,
-        targetDuration: 3, // 3 seconds for sample
-        volume: 0.7 // Reduced volume for whisper effect
-      };
-      
-      const result = await audioProcessor.createSampleAudio(audioFile, options);
-      
-      // Create a blob from the processed sample
-      const sampleBlob = new Blob([result.audioBuffer], { type: 'audio/wav' });
-      const url = URL.createObjectURL(sampleBlob);
-      setSampleAudioUrl(url);
-      
-      console.log(`Created sample: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
-    } catch (error) {
-      console.error('Error creating sample audio:', error);
-      alert('Failed to create sample audio. Please try again.');
-    } finally {
-      setIsCreatingSample(false);
     }
   };
 
@@ -268,27 +171,11 @@ export default function Home() {
       } else {
         audioRef.current.play();
       }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handlePlayPauseSample = () => {
-    if (sampleAudioRef.current) {
-      if (isPlayingSample) {
-        sampleAudioRef.current.pause();
-      } else {
-        sampleAudioRef.current.play();
-      }
-      setIsPlayingSample(!isPlayingSample);
     }
   };
 
   const handleAudioEnded = () => {
     setIsPlaying(false);
-  };
-
-  const handleSampleAudioEnded = () => {
-    setIsPlayingSample(false);
   };
 
   const triggerFileUpload = () => {
@@ -300,74 +187,47 @@ export default function Home() {
     setUploadedAudio(null);
     setBpmDetectionResult(null);
     setShowManualInput(false);
-    setCurrentStep('image');
     setAudioUrl(null);
-    setSampleAudioUrl(null);
-    setShowSampleSection(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const shareToSocialMedia = (platform: string) => {
-    const text = `Listen to my baby's heartbeat at ${bpm} BPM! Created with Baby Heartbeat Generator ❤️`;
-    const url = window.location.href;
-    
-    let shareUrl = '';
-    switch (platform) {
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
-        break;
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-        break;
-      case 'instagram':
-        // Instagram doesn't support direct sharing via URL, so we'll copy to clipboard
-        navigator.clipboard.writeText(`${text}\n\n${url}`);
-        alert('Link copied to clipboard! You can paste it in your Instagram story or post.');
-        return;
-      default:
-        return;
-    }
-    
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    setIsPlaying(false);
+    setCurrentStep('image');
+    setBpm(140);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-purple-800 mb-4">
             Baby Heartbeat Generator
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-lg text-gray-600 mb-6">
             Upload your ultrasound image and audio to create personalized baby heartbeat recordings
           </p>
-        </header>
-
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${currentStep === 'image' ? 'text-pink-600' : 'text-gray-400'}`}>
+          
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center mb-8">
+            <div className={`flex items-center ${currentStep === 'image' ? 'text-red-600' : 'text-gray-400'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                currentStep === 'image' ? 'border-pink-600 bg-pink-100' : 'border-gray-300'
+                currentStep === 'image' ? 'border-red-600 bg-red-100' : 'border-gray-300'
               }`}>
                 1
               </div>
               <span className="ml-2 font-medium">Upload Image</span>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className={`flex items-center ${currentStep === 'audio' ? 'text-pink-600' : 'text-gray-400'}`}>
+            <div className="w-8 h-0.5 bg-gray-300 mx-4"></div>
+            <div className={`flex items-center ${currentStep === 'audio' ? 'text-red-600' : 'text-gray-400'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                currentStep === 'audio' ? 'border-pink-600 bg-pink-100' : 'border-gray-300'
+                currentStep === 'audio' ? 'border-red-600 bg-red-100' : 'border-gray-300'
               }`}>
                 2
               </div>
               <span className="ml-2 font-medium">Upload Audio</span>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className={`flex items-center ${currentStep === 'process' ? 'text-pink-600' : 'text-gray-400'}`}>
+            <div className="w-8 h-0.5 bg-gray-300 mx-4"></div>
+            <div className={`flex items-center ${currentStep === 'adjust' ? 'text-red-600' : 'text-gray-400'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                currentStep === 'process' ? 'border-pink-600 bg-pink-100' : 'border-gray-300'
+                currentStep === 'adjust' ? 'border-red-600 bg-red-100' : 'border-gray-300'
               }`}>
                 3
               </div>
@@ -563,10 +423,10 @@ export default function Home() {
                       Upload Different File
                     </button>
                     <button
-                      onClick={() => setCurrentStep('process')}
+                      onClick={() => setCurrentStep('adjust')}
                       className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
                     >
-                      Continue to Generation
+                      Continue to Generate
                     </button>
                   </div>
                 </div>
@@ -574,7 +434,7 @@ export default function Home() {
 
               <div className="mt-4 text-center">
                 <button
-                  onClick={() => setCurrentStep('process')}
+                  onClick={() => setCurrentStep('adjust')}
                   className="text-pink-600 hover:text-pink-700 font-medium"
                 >
                   Skip audio upload and generate with detected BPM only
@@ -583,63 +443,67 @@ export default function Home() {
             </div>
           )}
 
-          {/* Step 3: Processing Section */}
-          {currentStep === 'process' && (
+          {/* Step 3: BPM Adjustment Section */}
+          {currentStep === 'adjust' && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Step 3: Generate Baby Heartbeat Audio
+                Step 3: Generate Baby Heartbeat Recording
               </h2>
               
-              <div className="bg-blue-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">Summary</h3>
-                <div className="space-y-2 text-blue-700">
-                  <p>• Detected BPM: <span className="font-semibold">{bpm}</span></p>
-                  {uploadedAudio && <p>• Audio file uploaded</p>}
-                  {!uploadedAudio && <p>• Using generated audio based on BPM</p>}
-                </div>
-              </div>
-
-              {/* BPM Input Section (for final adjustment) */}
-              <div className="mb-8">
-                <label htmlFor="bpm" className="block text-lg font-semibold text-gray-800 mb-4">
+              {/* Final BPM Adjustment Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
                   Final BPM Adjustment (if needed)
-                </label>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="range"
-                    id="bpm"
-                    min="60"
-                    max="200"
-                    value={bpm}
-                    onChange={handleBpmChange}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <input
-                    type="number"
-                    value={bpm}
-                    onChange={handleBpmChange}
-                    min="60"
-                    max="200"
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-semibold"
-                  />
-                  <span className="text-gray-600 font-medium">BPM</span>
-                </div>
-                <div className="mt-2 text-sm text-gray-500">
-                  Range: 60-200 BPM (typical baby heartbeat: 120-160 BPM)
+                </h3>
+                
+                <div className="space-y-4">
+                  {/* BPM Slider and Input */}
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <input
+                        type="range"
+                        min="60"
+                        max="200"
+                        value={bpm}
+                        onChange={(e) => setBpm(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        style={{
+                          background: `linear-gradient(to right, #e5e7eb 0%, #e5e7eb ${((bpm - 60) / (200 - 60)) * 100}%, #d1d5db ${((bpm - 60) / (200 - 60)) * 100}%, #d1d5db 100%)`
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={bpm}
+                        onChange={handleBpmChange}
+                        min="60"
+                        max="200"
+                        className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-semibold focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-600 font-medium">BPM</span>
+                    </div>
+                  </div>
+                  
+                  {/* Range Information */}
+                  <p className="text-sm text-gray-600">
+                    Range: 60-200 BPM (typical baby heartbeat: 120-160 BPM)
+                  </p>
                 </div>
               </div>
-
-              {/* Process Button */}
-              <div className="mb-8">
+              
+              {/* Generate Button */}
+              <div className="text-center">
                 <button
                   onClick={handleProcessAudio}
-                  disabled={isProcessing || isDetectingBpm || isUploadingAudio}
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isProcessing}
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isProcessing ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                      Processing Audio...
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                      Generating...
                     </div>
                   ) : (
                     'Generate Baby Heartbeat Audio'
@@ -647,211 +511,56 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Audio Player */}
+              {/* Adjusted Audio Player */}
               {audioUrl && (
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Your Baby's Heartbeat Audio ({bpm} BPM)
+                    Your Personalized Baby Heartbeat Recording
                   </h3>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={handlePlayPause}
-                      className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-full hover:shadow-lg transition-all"
-                    >
-                      {isPlaying ? (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                    <div className="flex-1">
-                      <audio
-                        ref={audioRef}
-                        src={audioUrl}
-                        onEnded={handleAudioEnded}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        className="w-full"
-                        controls
-                      />
+                  
+                  <div className="space-y-4">
+                    <audio
+                      ref={audioRef}
+                      src={audioUrl}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      onEnded={handleAudioEnded}
+                      controls
+                      className="w-full"
+                    />
+                    
+                    <div className="flex items-center justify-center">
+                      <button
+                        onClick={handlePlayPause}
+                        className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                      >
+                        {isPlaying ? 'Pause' : 'Play'} Recording
+                      </button>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 text-center">
+                      <p>Original BPM: 140 → Target BPM: {bpm}</p>
+                      <p>Speed Factor: {(bpm / 140).toFixed(2)}x</p>
                     </div>
                   </div>
                 </div>
               )}
-
-              <div className="mt-6 text-center">
-                <button
-                  onClick={resetProcess}
-                  className="text-gray-600 hover:text-gray-700 font-medium"
-                >
-                  Start Over
-                </button>
-              </div>
             </div>
           )}
-
-          {/* Sample Audio Section */}
-          {showSampleSection && (
-            <div className="mt-8 border-t pt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                🎁 Free Sample (3 seconds with whisper overlay)
-              </h2>
-              
-              <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-6 mb-6">
-                <p className="text-gray-700 mb-4">
-                  Create a 3-second sample with a gentle whisper overlay. Perfect for sharing on social media!
-                </p>
-                
-                {!sampleAudioUrl ? (
-                  <button
-                    onClick={handleCreateSample}
-                    disabled={isCreatingSample}
-                    className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCreatingSample ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                        Creating Sample...
-                      </div>
-                    ) : (
-                      'Create Free Sample'
-                    )}
-                  </button>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="bg-white rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                        Your Sample Audio ({bpm} BPM)
-                      </h3>
-                      <div className="flex items-center space-x-4">
-                        <button
-                          onClick={handlePlayPauseSample}
-                          className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-full hover:shadow-lg transition-all"
-                        >
-                          {isPlayingSample ? (
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
-                        <div className="flex-1">
-                          <audio
-                            ref={sampleAudioRef}
-                            src={sampleAudioUrl}
-                            onEnded={handleSampleAudioEnded}
-                            onPlay={() => setIsPlayingSample(true)}
-                            onPause={() => setIsPlayingSample(false)}
-                            className="w-full"
-                            controls
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Social Media Sharing */}
-                    <div className="bg-white rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                        Share Your Sample
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Share your baby's heartbeat sample with friends and family!
-                      </p>
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => shareToSocialMedia('facebook')}
-                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                        >
-                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                          </svg>
-                          Facebook
-                        </button>
-                        <button
-                          onClick={() => shareToSocialMedia('twitter')}
-                          className="flex-1 bg-blue-400 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors flex items-center justify-center"
-                        >
-                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                          </svg>
-                          Twitter
-                        </button>
-                        <button
-                          onClick={() => shareToSocialMedia('instagram')}
-                          className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors flex items-center justify-center"
-                        >
-                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987 6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.49-3.323-1.297C4.198 14.895 3.708 13.744 3.708 12.447s.49-2.448 1.297-3.323c.875-.807 2.026-1.297 3.323-1.297s2.448.49 3.323 1.297c.807.875 1.297 2.026 1.297 3.323s-.49 2.448-1.297 3.323c-.875.807-2.026 1.297-3.323 1.297zm7.718-1.297c-.875.807-2.026 1.297-3.323 1.297s-2.448-.49-3.323-1.297c-.807-.875-1.297-2.026-1.297-3.323s.49-2.448 1.297-3.323c.875-.807 2.026-1.297 3.323-1.297s2.448.49 3.323 1.297c.807.875 1.297 2.026 1.297 3.323s-.49 2.448-1.297 3.323z"/>
-                          </svg>
-                          Instagram
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Premium Upgrade CTA */}
-                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                        🎵 Want the Full Version?
-                      </h3>
-                      <p className="text-yellow-700 mb-3">
-                        Get the complete 8-second audio without whisper overlay for just $4.99!
-                      </p>
-                      <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
-                        Upgrade to Premium
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Instructions */}
-          <div className="mt-8 p-6 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">How to Use:</h3>
-            <ol className="text-blue-700 space-y-1">
-              <li>1. Upload your ultrasound image to automatically detect BPM</li>
-              <li>2. Optionally upload ultrasound audio for enhanced processing</li>
-              <li>3. Adjust BPM if needed and generate your personalized audio</li>
-              <li>4. Create a free 3-second sample with whisper overlay</li>
-              <li>5. Share your sample on social media or upgrade to premium</li>
-            </ol>
-          </div>
         </div>
 
-        {/* Status */}
-        <div className="mt-8 text-center text-gray-600">
-          <p>Advanced ultrasound analysis with automatic BPM detection and social sharing</p>
-          <p className="text-sm mt-2">Next: User authentication and payment processing</p>
+        {/* How to Use Section */}
+        <div className="mt-8 bg-white rounded-lg p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            How to Use:
+          </h3>
+          <ol className="list-decimal list-inside space-y-2 text-gray-700">
+            <li>Upload your ultrasound image to automatically detect BPM</li>
+            <li>Optionally upload ultrasound audio for enhanced processing</li>
+            <li>Generate your personalized baby heartbeat recording</li>
+          </ol>
         </div>
       </div>
-
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(to right, #ec4899, #8b5cf6);
-          cursor: pointer;
-        }
-        
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(to right, #ec4899, #8b5cf6);
-          cursor: pointer;
-          border: none;
-        }
-      `}</style>
     </div>
   );
 }
