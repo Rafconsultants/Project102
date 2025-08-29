@@ -144,6 +144,8 @@ export default function Home() {
   const handleProcessAudio = async () => {
     setIsProcessing(true);
     try {
+      console.log(`Starting audio processing for BPM: ${bpm}`);
+      
       // Load the baseline audio file
       const response = await fetch('/api/baseline-audio');
       if (!response.ok) {
@@ -153,6 +155,8 @@ export default function Home() {
       const audioBlob = await response.blob();
       const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
       
+      console.log(`Loaded baseline audio: ${audioBlob.size} bytes`);
+      
       // Process the audio with the target BPM and 8-second duration
       const options: AudioProcessingOptions = {
         bpm: bpm,
@@ -160,7 +164,10 @@ export default function Home() {
         volume: 1.0
       };
       
+      console.log(`Processing options:`, options);
       const result = await audioProcessor.processAudio(audioFile, options);
+      
+      console.log(`Processing completed:`, result);
       
       // Create a blob from the processed audio
       const processedBlob = new Blob([result.audioBuffer], { type: 'audio/wav' });
@@ -169,6 +176,8 @@ export default function Home() {
       setShowSampleSection(true);
       
       console.log(`Processed audio: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
+      console.log(`Original BPM: 140, Target BPM: ${result.bpm}, Tempo Ratio: ${(140/result.bpm).toFixed(3)}`);
+      console.log(`Processed blob size: ${processedBlob.size} bytes`);
     } catch (error) {
       console.error('Error processing audio:', error);
       alert('Failed to process audio. Please try again.');

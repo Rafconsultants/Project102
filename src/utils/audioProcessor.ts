@@ -30,36 +30,53 @@ export class AudioProcessor {
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
       // Calculate the tempo change factor
-      const originalBPM = 140; // We'll need to detect this from the audio
+      const originalBPM = 140; // Baseline BPM of the original audio
       const tempoRatio = originalBPM / options.bpm;
 
       // Calculate target duration
       const targetDuration = options.targetDuration || 8; // Default to 8 seconds
-      const durationRatio = targetDuration / audioBuffer.duration;
+      
+      // For BPM adjustment, we need to stretch/compress the audio based on tempo ratio
+      // Then adjust the duration to match target duration
+      const tempoAdjustedLength = Math.floor(audioBuffer.length / tempoRatio);
+      const finalDurationRatio = targetDuration / (tempoAdjustedLength / audioBuffer.sampleRate);
+      const finalLength = Math.floor(tempoAdjustedLength * finalDurationRatio);
 
-      // Create a new audio buffer with the target duration
+      // Create a new audio buffer with the final length
       const sampleRate = audioBuffer.sampleRate;
-      const newLength = Math.floor(audioBuffer.length * durationRatio);
       const newAudioBuffer = this.audioContext.createBuffer(
         audioBuffer.numberOfChannels,
-        newLength,
+        finalLength,
         sampleRate
       );
 
-      // Copy and stretch the audio data
+      // Copy and process the audio data with tempo adjustment
       for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
         const originalData = audioBuffer.getChannelData(channel);
         const newData = newAudioBuffer.getChannelData(channel);
 
-        // Simple linear interpolation for stretching
-        for (let i = 0; i < newLength; i++) {
-          const originalIndex = (i / durationRatio);
+        // First apply tempo adjustment (stretch/compress based on BPM)
+        for (let i = 0; i < tempoAdjustedLength; i++) {
+          const originalIndex = i * tempoRatio;
           const index1 = Math.floor(originalIndex);
           const index2 = Math.min(index1 + 1, originalData.length - 1);
           const fraction = originalIndex - index1;
 
           if (index1 < originalData.length) {
             newData[i] = originalData[index1] * (1 - fraction) + originalData[index2] * fraction;
+          }
+        }
+
+        // Then apply duration adjustment to reach target duration
+        const tempData = new Float32Array(newData);
+        for (let i = 0; i < finalLength; i++) {
+          const tempIndex = (i / finalDurationRatio);
+          const index1 = Math.floor(tempIndex);
+          const index2 = Math.min(index1 + 1, tempData.length - 1);
+          const fraction = tempIndex - index1;
+
+          if (index1 < tempData.length) {
+            newData[i] = tempData[index1] * (1 - fraction) + tempData[index2] * fraction;
           }
         }
       }
