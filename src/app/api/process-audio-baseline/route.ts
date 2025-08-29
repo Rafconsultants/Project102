@@ -81,35 +81,17 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
     const currentDuration = dataSize / (sampleRate * channels * bitsPerSample / 8);
     const targetDuration = 8; // Always target 8 seconds
     
-    // Use a more conservative approach - extend the original audio to 8 seconds
-    // without changing the sample rate, then adjust playback speed through sample rate
-    const originalData = audioBuffer.slice(44);
-    const originalDataSize = originalData.length;
+    // Simple approach: calculate exact bytes needed for 8 seconds
+    const bytesPerSecond = sampleRate * channels * bitsPerSample / 8;
+    const targetDataSize = Math.round(bytesPerSecond * targetDuration);
     
-    // Calculate how many times we need to repeat the original audio to reach 8 seconds
-    const repeatCount = Math.ceil(targetDuration / currentDuration);
-    const targetDataSize = originalDataSize * repeatCount;
-    
-    // Ensure targetDataSize is within safe limits
-    if (targetDataSize > 1000000000) { // 1GB limit
-      console.warn(`Target data size ${targetDataSize} too large, using original audio with sample rate adjustment only`);
-      // Just adjust the sample rate without extending duration
-      const simpleBuffer = Buffer.alloc(audioBuffer.length);
-      audioBuffer.copy(simpleBuffer);
-      simpleBuffer.writeUInt32LE(newSampleRate, 24);
-      
-      const newByteRate = newSampleRate * channels * bitsPerSample / 8;
-      if (newByteRate > 0xFFFFFFFF) {
-        simpleBuffer.writeUInt32LE(0xFFFFFFFF, 28);
-      } else {
-        simpleBuffer.writeUInt32LE(Math.round(newByteRate), 28);
-      }
-      
-      console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Original duration maintained`);
-      return simpleBuffer;
+    // Safety check - ensure reasonable size
+    if (targetDataSize > 100000000) { // 100MB limit
+      console.warn(`Target data size ${targetDataSize} too large, using fallback approach`);
+      return createSimpleAudio(Math.round(BASELINE_BPM * speedFactor));
     }
     
-    // Create new buffer for extended audio
+    // Create new buffer for 8-second audio
     const newBuffer = Buffer.alloc(44 + targetDataSize);
     
     // Copy the original header
@@ -132,19 +114,19 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
     // Update the data size in the WAV header
     newBuffer.writeUInt32LE(targetDataSize, 40);
     
-    // Copy and repeat the audio data to fill 8 seconds
+    // Get the original audio data (skip 44-byte header)
+    const originalData = audioBuffer.slice(44);
+    const originalDataSize = originalData.length;
+    
+    // Fill the new buffer by repeating the original audio data
     let offset = 44;
+    let remainingBytes = targetDataSize;
     
-    for (let i = 0; i < repeatCount && offset < newBuffer.length - originalDataSize; i++) {
-      originalData.copy(newBuffer, offset);
-      offset += originalDataSize;
-    }
-    
-    // If we still have space, fill with the last portion of the original audio
-    if (offset < newBuffer.length - 44) {
-      const remainingSpace = newBuffer.length - offset;
-      const fillData = originalData.slice(0, Math.min(remainingSpace, originalDataSize));
-      fillData.copy(newBuffer, offset);
+    while (remainingBytes > 0) {
+      const bytesToCopy = Math.min(originalDataSize, remainingBytes);
+      originalData.copy(newBuffer, offset, 0, bytesToCopy);
+      offset += bytesToCopy;
+      remainingBytes -= bytesToCopy;
     }
     
     console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Duration: ${targetDuration}s`);
