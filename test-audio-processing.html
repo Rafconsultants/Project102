@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Audio Processing Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 3px; }
+        .enhanced { background: #e8f5e8; border-left: 4px solid #4CAF50; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Enhanced Audio Processing Test</h1>
+    <div class="test-section">
+        <h3>Test Different BPM Values:</h3>
+        <label for="bpm">BPM:</label>
+        <input type="number" id="bpm" value="140" min="60" max="200">
+        <button onclick="testAudioProcessing()">Test Processing</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Quick Test Buttons:</h3>
+        <button onclick="quickTest(100)">Test 100 BPM (Slower)</button>
+        <button onclick="quickTest(140)">Test 140 BPM (Baseline)</button>
+        <button onclick="quickTest(155)">Test 155 BPM (Faster)</button>
+        <button onclick="quickTest(200)">Test 200 BPM (Much Faster)</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Audio Player:</h3>
+        <audio id="audioPlayer" controls style="width: 100%;"></audio>
+    </div>
+
+    <script>
+        class AudioProcessor {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async processAudio(audioFile, options) {
+                try {
+                    const arrayBuffer = await audioFile.arrayBuffer();
+                    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+                    const originalBPM = 140;
+                    
+                    // Enhanced tempo ratio calculation for more dramatic effect
+                    let tempoRatio = originalBPM / options.bpm;
+                    
+                    // Apply additional scaling for more dramatic differences
+                    if (options.bpm > originalBPM) {
+                        // For higher BPM (faster), make it even faster
+                        tempoRatio *= 0.7; // 30% more dramatic
+                    } else if (options.bpm < originalBPM) {
+                        // For lower BPM (slower), make it even slower
+                        tempoRatio *= 1.4; // 40% more dramatic
+                    }
+
+                    const targetDuration = options.targetDuration || 8;
+                    
+                    const tempoAdjustedLength = Math.floor(audioBuffer.length / tempoRatio);
+                    const finalDurationRatio = targetDuration / (tempoAdjustedLength / audioBuffer.sampleRate);
+                    const finalLength = Math.floor(tempoAdjustedLength * finalDurationRatio);
+
+                    const newAudioBuffer = this.audioContext.createBuffer(
+                        audioBuffer.numberOfChannels,
+                        finalLength,
+                        audioBuffer.sampleRate
+                    );
+
+                    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+                        const originalData = audioBuffer.getChannelData(channel);
+                        const newData = newAudioBuffer.getChannelData(channel);
+
+                        // Apply enhanced tempo adjustment
+                        for (let i = 0; i < tempoAdjustedLength; i++) {
+                            const originalIndex = i * tempoRatio;
+                            const index1 = Math.floor(originalIndex);
+                            const index2 = Math.min(index1 + 1, originalData.length - 1);
+                            const fraction = originalIndex - index1;
+
+                            if (index1 < originalData.length) {
+                                newData[i] = originalData[index1] * (1 - fraction) + originalData[index2] * fraction;
+                            }
+                        }
+
+                        // Apply duration adjustment
+                        const tempData = new Float32Array(newData);
+                        for (let i = 0; i < finalLength; i++) {
+                            const tempIndex = (i / finalDurationRatio);
+                            const index1 = Math.floor(tempIndex);
+                            const index2 = Math.min(index1 + 1, tempData.length - 1);
+                            const fraction = tempIndex - index1;
+
+                            if (index1 < tempData.length) {
+                                newData[i] = tempData[index1] * (1 - fraction) + tempData[index2] * fraction;
+                            }
+                        }
+                    }
+
+                    return {
+                        audioBuffer: newAudioBuffer,
+                        duration: newAudioBuffer.duration,
+                        bpm: options.bpm,
+                        enhancedTempoRatio: tempoRatio
+                    };
+                } catch (error) {
+                    console.error('Error processing audio:', error);
+                    throw error;
+                }
+            }
+
+            audioBufferToWav(buffer) {
+                const length = buffer.length;
+                const numberOfChannels = buffer.numberOfChannels;
+                const sampleRate = buffer.sampleRate;
+                const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+                const view = new DataView(arrayBuffer);
+
+                const writeString = (offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+
+                writeString(0, 'RIFF');
+                view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, numberOfChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+                view.setUint16(32, numberOfChannels * 2, true);
+                view.setUint16(34, 16, true);
+                writeString(36, 'data');
+                view.setUint32(40, length * numberOfChannels * 2, true);
+
+                let offset = 44;
+                for (let i = 0; i < length; i++) {
+                    for (let channel = 0; channel < numberOfChannels; channel++) {
+                        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                        offset += 2;
+                    }
+                }
+
+                return arrayBuffer;
+            }
+        }
+
+        async function testAudioProcessing() {
+            const bpm = parseInt(document.getElementById('bpm').value);
+            await processAudio(bpm);
+        }
+
+        async function quickTest(bpm) {
+            document.getElementById('bpm').value = bpm;
+            await processAudio(bpm);
+        }
+
+        async function processAudio(bpm) {
+            const resultsDiv = document.getElementById('results');
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            resultsDiv.innerHTML = '<div class="result">🔄 Processing...</div>';
+
+            try {
+                // Load baseline audio
+                const response = await fetch('http://localhost:3000/api/baseline-audio');
+                const audioBlob = await response.blob();
+                const audioFile = new File([audioBlob], 'baseline.wav', { type: 'audio/wav' });
+
+                // Process audio
+                const processor = new AudioProcessor();
+                const result = await processor.processAudio(audioFile, {
+                    bpm: bpm,
+                    targetDuration: 8
+                });
+
+                // Convert to WAV and create blob
+                const wavBuffer = processor.audioBufferToWav(result.audioBuffer);
+                const processedBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+                // Calculate effects
+                const baseTempoRatio = (140 / bpm).toFixed(3);
+                const enhancedTempoRatio = result.enhancedTempoRatio.toFixed(3);
+                const speedChange = bpm > 140 ? 
+                    `${((140/bpm - 1) * 100 * 0.7).toFixed(1)}% faster` : 
+                    `${((1 - 140/bpm) * 100 * 1.4).toFixed(1)}% slower`;
+
+                // Display enhanced results
+                resultsDiv.innerHTML = `
+                    <div class="result enhanced">
+                        <h4>🎯 Enhanced Processing Results:</h4>
+                        <p><strong>Original BPM:</strong> 140</p>
+                        <p><strong>Target BPM:</strong> ${bpm}</p>
+                        <p><strong>Base Tempo Ratio:</strong> ${baseTempoRatio}</p>
+                        <p><strong>Enhanced Tempo Ratio:</strong> ${enhancedTempoRatio}</p>
+                        <p><strong>Speed Change:</strong> ${speedChange}</p>
+                        <p><strong>Duration:</strong> ${result.duration.toFixed(2)}s</p>
+                        <p><strong>Original Size:</strong> ${audioBlob.size.toLocaleString()} bytes</p>
+                        <p><strong>Processed Size:</strong> ${processedBlob.size.toLocaleString()} bytes</p>
+                    </div>
+                `;
+
+                // Play the processed audio
+                const url = URL.createObjectURL(processedBlob);
+                audioPlayer.src = url;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result" style="background: #ffe6e6; border-left: 4px solid #f44336;">❌ Error: ${error.message}</div>`;
+                console.error('Test failed:', error);
+            }
+        }
+    </script>
+</body>
+</html>

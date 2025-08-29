@@ -29,9 +29,20 @@ export class AudioProcessor {
       const arrayBuffer = await audioFile.arrayBuffer();
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
-      // Calculate the tempo change factor
+      // Calculate the tempo change factor with enhanced effect
       const originalBPM = 140; // Baseline BPM of the original audio
-      const tempoRatio = originalBPM / options.bpm;
+      
+      // Enhanced tempo ratio calculation for more dramatic effect
+      let tempoRatio = originalBPM / options.bpm;
+      
+      // Apply additional scaling for more dramatic differences
+      if (options.bpm > originalBPM) {
+        // For higher BPM (faster), make it even faster
+        tempoRatio *= 0.7; // 30% more dramatic
+      } else if (options.bpm < originalBPM) {
+        // For lower BPM (slower), make it even slower
+        tempoRatio *= 1.4; // 40% more dramatic
+      }
 
       // Calculate target duration
       const targetDuration = options.targetDuration || 8; // Default to 8 seconds
@@ -50,12 +61,12 @@ export class AudioProcessor {
         sampleRate
       );
 
-      // Copy and process the audio data with tempo adjustment
+      // Copy and process the audio data with enhanced tempo adjustment
       for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
         const originalData = audioBuffer.getChannelData(channel);
         const newData = newAudioBuffer.getChannelData(channel);
 
-        // First apply tempo adjustment (stretch/compress based on BPM)
+        // First apply enhanced tempo adjustment (stretch/compress based on BPM)
         for (let i = 0; i < tempoAdjustedLength; i++) {
           const originalIndex = i * tempoRatio;
           const index1 = Math.floor(originalIndex);
