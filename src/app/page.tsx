@@ -191,18 +191,19 @@ export default function Home() {
       
       console.log(`Processed audio: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
       console.log(`Original BPM: 140, Target BPM: ${result.bpm}`);
+      console.log(`Expected tempo change: ${result.bpm > 140 ? 'FASTER' : 'SLOWER'}`);
       
       // Calculate enhanced effects
-      const baseTempoRatio = (140/result.bpm).toFixed(3);
+      const baseTempoRatio = (result.bpm/140).toFixed(3);
       let enhancedTempoRatio = baseTempoRatio;
       let speedChange = "normal";
       
       if (result.bpm > 140) {
-        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 0.7).toFixed(3);
-        speedChange = `${((140/result.bpm - 1) * 100 * 0.7).toFixed(1)}% faster`;
+        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 1.3).toFixed(3);
+        speedChange = `${((result.bpm/140 - 1) * 100 * 1.3).toFixed(1)}% faster`;
       } else if (result.bpm < 140) {
-        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 1.4).toFixed(3);
-        speedChange = `${((1 - 140/result.bpm) * 100 * 1.4).toFixed(1)}% slower`;
+        enhancedTempoRatio = (parseFloat(baseTempoRatio) * 0.6).toFixed(3);
+        speedChange = `${((1 - result.bpm/140) * 100 * 0.6).toFixed(1)}% slower`;
       }
       
       console.log(`Base Tempo Ratio: ${baseTempoRatio}, Enhanced: ${enhancedTempoRatio}`);

@@ -43,15 +43,16 @@ export class AudioProcessor {
       const originalBPM = 140; // Baseline BPM of the original audio
       
       // Enhanced tempo ratio calculation for more dramatic effect
-      let tempoRatio = originalBPM / options.bpm;
+      // Higher BPM = faster playback = shorter duration = smaller ratio
+      let tempoRatio = options.bpm / originalBPM;
       
       // Apply additional scaling for more dramatic differences
       if (options.bpm > originalBPM) {
         // For higher BPM (faster), make it even faster
-        tempoRatio *= 0.7; // 30% more dramatic
+        tempoRatio *= 1.3; // 30% more dramatic
       } else if (options.bpm < originalBPM) {
         // For lower BPM (slower), make it even slower
-        tempoRatio *= 1.4; // 40% more dramatic
+        tempoRatio *= 0.6; // 40% more dramatic
       }
 
       console.log('Tempo processing:', {
