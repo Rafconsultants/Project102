@@ -47,11 +47,8 @@ export class AudioProcessor {
       // Calculate target duration
       const targetDuration = options.targetDuration || 8; // Default to 8 seconds
       
-      // For BPM adjustment, we need to stretch/compress the audio based on tempo ratio
-      // Then adjust the duration to match target duration
-      const tempoAdjustedLength = Math.floor(audioBuffer.length / tempoRatio);
-      const finalDurationRatio = targetDuration / (tempoAdjustedLength / audioBuffer.sampleRate);
-      const finalLength = Math.floor(tempoAdjustedLength * finalDurationRatio);
+      // Calculate the final length needed for the target duration
+      const finalLength = Math.floor(targetDuration * audioBuffer.sampleRate);
 
       // Create a new audio buffer with the final length
       const sampleRate = audioBuffer.sampleRate;
@@ -61,33 +58,33 @@ export class AudioProcessor {
         sampleRate
       );
 
-      // Copy and process the audio data with enhanced tempo adjustment
+      // Process each channel with improved algorithm
       for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
         const originalData = audioBuffer.getChannelData(channel);
         const newData = newAudioBuffer.getChannelData(channel);
 
-        // First apply enhanced tempo adjustment (stretch/compress based on BPM)
-        for (let i = 0; i < tempoAdjustedLength; i++) {
-          const originalIndex = i * tempoRatio;
-          const index1 = Math.floor(originalIndex);
-          const index2 = Math.min(index1 + 1, originalData.length - 1);
-          const fraction = originalIndex - index1;
-
-          if (index1 < originalData.length) {
-            newData[i] = originalData[index1] * (1 - fraction) + originalData[index2] * fraction;
-          }
-        }
-
-        // Then apply duration adjustment to reach target duration
-        const tempData = new Float32Array(newData);
+        // Use a single-pass algorithm that combines tempo and duration adjustment
         for (let i = 0; i < finalLength; i++) {
-          const tempIndex = (i / finalDurationRatio);
-          const index1 = Math.floor(tempIndex);
-          const index2 = Math.min(index1 + 1, tempData.length - 1);
-          const fraction = tempIndex - index1;
-
-          if (index1 < tempData.length) {
-            newData[i] = tempData[index1] * (1 - fraction) + tempData[index2] * fraction;
+          // Calculate the position in the original audio
+          // This combines both tempo adjustment and duration scaling
+          const originalPosition = (i / finalLength) * originalData.length * tempoRatio;
+          
+          // Ensure we don't go beyond the original data bounds
+          if (originalPosition >= originalData.length - 1) {
+            newData[i] = originalData[originalData.length - 1];
+          } else {
+            // Use cubic interpolation for smoother results
+            const index = Math.floor(originalPosition);
+            const fraction = originalPosition - index;
+            
+            // Get surrounding samples for interpolation
+            const sample0 = index > 0 ? originalData[index - 1] : originalData[index];
+            const sample1 = originalData[index];
+            const sample2 = originalData[Math.min(index + 1, originalData.length - 1)];
+            const sample3 = originalData[Math.min(index + 2, originalData.length - 1)];
+            
+            // Cubic interpolation for smoother audio
+            newData[i] = this.cubicInterpolate(sample0, sample1, sample2, sample3, fraction);
           }
         }
       }
@@ -114,6 +111,19 @@ export class AudioProcessor {
       console.error('Error processing audio:', error);
       throw new Error('Failed to process audio');
     }
+  }
+
+  // Cubic interpolation for smoother audio quality
+  private cubicInterpolate(y0: number, y1: number, y2: number, y3: number, mu: number): number {
+    const mu2 = mu * mu;
+    const mu3 = mu2 * mu;
+    const m0 = (y2 - y0) * 0.5;
+    const m1 = (y3 - y1) * 0.5;
+    
+    return (2 * mu3 - 3 * mu2 + 1) * y1 + 
+           (mu3 - 2 * mu2 + mu) * m0 + 
+           (-2 * mu3 + 3 * mu2) * y2 + 
+           (mu3 - mu2) * m1;
   }
 
   private audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
