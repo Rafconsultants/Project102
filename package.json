@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@tensorflow/tfjs-node": "^4.22.0",
     "canvas": "^3.2.0",
     "formidable": "^3.5.4",

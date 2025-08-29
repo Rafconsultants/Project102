@@ -8,8 +8,7 @@ const BASELINE_BPM = 140; // We'll need to determine this from the audio file
 export async function POST(request: NextRequest) {
   try {
     const { bpm } = await request.json();
-
-    // Validate BPM input
+    
     if (!bpm || bpm < 60 || bpm > 200) {
       return NextResponse.json(
         { error: 'Invalid BPM value. Must be between 60 and 200.' },
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Path to the baseline audio file
     const baselinePath = join(process.cwd(), 'baseline-heartbeat.wav');
     
     if (!existsSync(baselinePath)) {
@@ -27,18 +25,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, just return the baseline audio file
-    // In a full implementation, we would use FFmpeg to adjust the tempo
+    // Read the baseline audio file
     const audioBuffer = readFileSync(baselinePath);
     
-    // Return the baseline audio
+    // For now, we'll return the baseline audio with metadata
+    // The actual BPM processing will be done client-side for better performance
     return new NextResponse(audioBuffer, {
       headers: {
         'Content-Type': 'audio/wav',
         'Content-Length': audioBuffer.length.toString(),
+        'X-Original-BPM': BASELINE_BPM.toString(),
+        'X-Target-BPM': bpm.toString(),
+        'X-Audio-Duration': '8', // 8 seconds
       },
     });
-
   } catch (error) {
     console.error('Error processing audio:', error);
     return NextResponse.json(

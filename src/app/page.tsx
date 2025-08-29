@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { audioProcessor, AudioProcessingOptions } from '../utils/audioProcessor';
 
 export default function Home() {
   const [bpm, setBpm] = useState(120);
@@ -143,26 +144,34 @@ export default function Home() {
   const handleProcessAudio = async () => {
     setIsProcessing(true);
     try {
-      const response = await fetch('/api/process-audio-baseline', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bpm: bpm,
-        }),
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
-        setShowSampleSection(true);
-      } else {
-        console.error('Failed to process audio');
+      // Load the baseline audio file
+      const response = await fetch('/api/baseline-audio');
+      if (!response.ok) {
+        throw new Error('Failed to load baseline audio');
       }
+      
+      const audioBlob = await response.blob();
+      const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
+      
+      // Process the audio with the target BPM and 8-second duration
+      const options: AudioProcessingOptions = {
+        bpm: bpm,
+        targetDuration: 8, // Ensure 8 seconds
+        volume: 1.0
+      };
+      
+      const result = await audioProcessor.processAudio(audioFile, options);
+      
+      // Create a blob from the processed audio
+      const processedBlob = new Blob([result.audioBuffer], { type: 'audio/wav' });
+      const url = URL.createObjectURL(processedBlob);
+      setAudioUrl(url);
+      setShowSampleSection(true);
+      
+      console.log(`Processed audio: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
     } catch (error) {
       console.error('Error processing audio:', error);
+      alert('Failed to process audio. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -171,25 +180,33 @@ export default function Home() {
   const handleCreateSample = async () => {
     setIsCreatingSample(true);
     try {
-      const response = await fetch('/api/create-sample-baseline', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bpm: bpm,
-        }),
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setSampleAudioUrl(url);
-      } else {
-        console.error('Failed to create sample audio');
+      // Load the baseline audio file
+      const response = await fetch('/api/baseline-audio');
+      if (!response.ok) {
+        throw new Error('Failed to load baseline audio');
       }
+      
+      const audioBlob = await response.blob();
+      const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
+      
+      // Create a 3-second sample with whisper overlay effect
+      const options: AudioProcessingOptions = {
+        bpm: bpm,
+        targetDuration: 3, // 3 seconds for sample
+        volume: 0.7 // Reduced volume for whisper effect
+      };
+      
+      const result = await audioProcessor.createSampleAudio(audioFile, options);
+      
+      // Create a blob from the processed sample
+      const sampleBlob = new Blob([result.audioBuffer], { type: 'audio/wav' });
+      const url = URL.createObjectURL(sampleBlob);
+      setSampleAudioUrl(url);
+      
+      console.log(`Created sample: ${result.duration.toFixed(2)}s at ${result.bpm} BPM`);
     } catch (error) {
       console.error('Error creating sample audio:', error);
+      alert('Failed to create sample audio. Please try again.');
     } finally {
       setIsCreatingSample(false);
     }
