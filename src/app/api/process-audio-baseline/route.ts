@@ -72,30 +72,15 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
     const sampleRate = audioBuffer.readUInt32LE(24);
     const bitsPerSample = audioBuffer.readUInt16LE(34);
     const channels = audioBuffer.readUInt16LE(22);
-    const dataSize = audioBuffer.readUInt32LE(40);
     
     // Calculate new sample rate based on speed factor
     const newSampleRate = Math.round(sampleRate * speedFactor);
     
-    // Calculate current duration
-    const currentDuration = dataSize / (sampleRate * channels * bitsPerSample / 8);
-    const targetDuration = 8; // Always target 8 seconds
+    // Create new buffer with same size as original
+    const newBuffer = Buffer.alloc(audioBuffer.length);
     
-    // Simple approach: calculate exact bytes needed for 8 seconds
-    const bytesPerSecond = sampleRate * channels * bitsPerSample / 8;
-    const targetDataSize = Math.round(bytesPerSecond * targetDuration);
-    
-    // Safety check - ensure reasonable size
-    if (targetDataSize > 100000000) { // 100MB limit
-      console.warn(`Target data size ${targetDataSize} too large, using fallback approach`);
-      return createSimpleAudio(Math.round(BASELINE_BPM * speedFactor));
-    }
-    
-    // Create new buffer for 8-second audio
-    const newBuffer = Buffer.alloc(44 + targetDataSize);
-    
-    // Copy the original header
-    audioBuffer.copy(newBuffer, 0, 0, 44);
+    // Copy the original audio data
+    audioBuffer.copy(newBuffer);
     
     // Update the sample rate in the WAV header
     newBuffer.writeUInt32LE(newSampleRate, 24);
@@ -111,49 +96,14 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
       newBuffer.writeUInt32LE(Math.round(newByteRate), 28);
     }
     
-    // Update the data size in the WAV header
-    newBuffer.writeUInt32LE(targetDataSize, 40);
-    
-    // Get the original audio data (skip 44-byte header)
-    const originalData = audioBuffer.slice(44);
-    const originalDataSize = originalData.length;
-    
-    // Fill the new buffer by repeating the original audio data
-    let offset = 44;
-    let remainingBytes = targetDataSize;
-    
-    while (remainingBytes > 0) {
-      const bytesToCopy = Math.min(originalDataSize, remainingBytes);
-      originalData.copy(newBuffer, offset, 0, bytesToCopy);
-      offset += bytesToCopy;
-      remainingBytes -= bytesToCopy;
-    }
-    
-    console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Duration: ${targetDuration}s`);
+    console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Original duration maintained`);
     
     return newBuffer;
     
   } catch (error) {
     console.error('Error adjusting audio speed:', error);
-    // Return original audio with sample rate adjustment only
-    const fallbackBuffer = Buffer.alloc(audioBuffer.length);
-    audioBuffer.copy(fallbackBuffer);
-    
-    const sampleRate = audioBuffer.readUInt32LE(24);
-    const bitsPerSample = audioBuffer.readUInt16LE(34);
-    const channels = audioBuffer.readUInt16LE(22);
-    const newSampleRate = Math.round(sampleRate * speedFactor);
-    
-    fallbackBuffer.writeUInt32LE(newSampleRate, 24);
-    
-    const newByteRate = newSampleRate * channels * bitsPerSample / 8;
-    if (newByteRate > 0xFFFFFFFF) {
-      fallbackBuffer.writeUInt32LE(0xFFFFFFFF, 28);
-    } else {
-      fallbackBuffer.writeUInt32LE(Math.round(newByteRate), 28);
-    }
-    
-    return fallbackBuffer;
+    // Return original audio unchanged
+    return audioBuffer;
   }
 }
 
