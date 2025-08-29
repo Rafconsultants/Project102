@@ -25,9 +25,19 @@ export class AudioProcessor {
     }
 
     try {
+      console.log('Processing audio file:', audioFile.name, 'Size:', audioFile.size);
+      
       // Load the audio file
       const arrayBuffer = await audioFile.arrayBuffer();
+      console.log('Loaded array buffer size:', arrayBuffer.byteLength);
+      
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      console.log('Decoded audio buffer:', {
+        duration: audioBuffer.duration,
+        sampleRate: audioBuffer.sampleRate,
+        numberOfChannels: audioBuffer.numberOfChannels,
+        length: audioBuffer.length
+      });
 
       // Calculate the tempo change factor with enhanced effect
       const originalBPM = 140; // Baseline BPM of the original audio
@@ -44,11 +54,23 @@ export class AudioProcessor {
         tempoRatio *= 1.4; // 40% more dramatic
       }
 
+      console.log('Tempo processing:', {
+        originalBPM,
+        targetBPM: options.bpm,
+        baseTempoRatio: originalBPM / options.bpm,
+        enhancedTempoRatio: tempoRatio
+      });
+
       // Calculate target duration
       const targetDuration = options.targetDuration || 8; // Default to 8 seconds
       
       // Calculate the final length needed for the target duration
       const finalLength = Math.floor(targetDuration * audioBuffer.sampleRate);
+      console.log('Final length calculation:', {
+        targetDuration,
+        sampleRate: audioBuffer.sampleRate,
+        finalLength
+      });
 
       // Create a new audio buffer with the final length
       const sampleRate = audioBuffer.sampleRate;
@@ -58,39 +80,38 @@ export class AudioProcessor {
         sampleRate
       );
 
-      // Process each channel with improved algorithm
+      // Process each channel with simplified algorithm
       for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
         const originalData = audioBuffer.getChannelData(channel);
         const newData = newAudioBuffer.getChannelData(channel);
 
-        // Use a single-pass algorithm that combines tempo and duration adjustment
+        console.log(`Processing channel ${channel}:`, {
+          originalLength: originalData.length,
+          newLength: newData.length
+        });
+
+        // Simple linear interpolation for tempo adjustment
         for (let i = 0; i < finalLength; i++) {
           // Calculate the position in the original audio
-          // This combines both tempo adjustment and duration scaling
           const originalPosition = (i / finalLength) * originalData.length * tempoRatio;
           
           // Ensure we don't go beyond the original data bounds
           if (originalPosition >= originalData.length - 1) {
             newData[i] = originalData[originalData.length - 1];
           } else {
-            // Use cubic interpolation for smoother results
+            // Simple linear interpolation
             const index = Math.floor(originalPosition);
             const fraction = originalPosition - index;
+            const nextIndex = Math.min(index + 1, originalData.length - 1);
             
-            // Get surrounding samples for interpolation
-            const sample0 = index > 0 ? originalData[index - 1] : originalData[index];
-            const sample1 = originalData[index];
-            const sample2 = originalData[Math.min(index + 1, originalData.length - 1)];
-            const sample3 = originalData[Math.min(index + 2, originalData.length - 1)];
-            
-            // Cubic interpolation for smoother audio
-            newData[i] = this.cubicInterpolate(sample0, sample1, sample2, sample3, fraction);
+            newData[i] = originalData[index] * (1 - fraction) + originalData[nextIndex] * fraction;
           }
         }
       }
 
       // Apply volume adjustment if specified
       if (options.volume !== undefined) {
+        console.log('Applying volume adjustment:', options.volume);
         for (let channel = 0; channel < newAudioBuffer.numberOfChannels; channel++) {
           const data = newAudioBuffer.getChannelData(channel);
           for (let i = 0; i < data.length; i++) {
@@ -99,8 +120,15 @@ export class AudioProcessor {
         }
       }
 
+      console.log('Processing completed:', {
+        originalDuration: audioBuffer.duration,
+        newDuration: newAudioBuffer.duration,
+        targetDuration
+      });
+
       // Convert back to WAV format
       const wavBuffer = this.audioBufferToWav(newAudioBuffer);
+      console.log('WAV conversion completed, buffer size:', wavBuffer.byteLength);
 
       return {
         audioBuffer: wavBuffer,
@@ -111,19 +139,6 @@ export class AudioProcessor {
       console.error('Error processing audio:', error);
       throw new Error('Failed to process audio');
     }
-  }
-
-  // Cubic interpolation for smoother audio quality
-  private cubicInterpolate(y0: number, y1: number, y2: number, y3: number, mu: number): number {
-    const mu2 = mu * mu;
-    const mu3 = mu2 * mu;
-    const m0 = (y2 - y0) * 0.5;
-    const m1 = (y3 - y1) * 0.5;
-    
-    return (2 * mu3 - 3 * mu2 + 1) * y1 + 
-           (mu3 - 2 * mu2 + mu) * m0 + 
-           (-2 * mu3 + 3 * mu2) * y2 + 
-           (mu3 - mu2) * m1;
   }
 
   private audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {

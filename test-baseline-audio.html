@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseline Audio Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔊 Baseline Audio Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Baseline Audio Loading:</h3>
+        <button onclick="testBaselineAudio()">Load and Test Baseline Audio</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Original Audio:</h3>
+        <audio id="originalAudio" controls style="width: 100%;"></audio>
+    </div>
+
+    <div class="test-section">
+        <h3>Processed Audio (140 BPM):</h3>
+        <audio id="processedAudio" controls style="width: 100%;"></audio>
+    </div>
+
+    <script>
+        async function testBaselineAudio() {
+            const resultsDiv = document.getElementById('results');
+            const originalAudio = document.getElementById('originalAudio');
+            const processedAudio = document.getElementById('processedAudio');
+
+            resultsDiv.innerHTML = '<div class="result">🔄 Loading baseline audio...</div>';
+
+            try {
+                // Test 1: Load baseline audio
+                console.log('Step 1: Loading baseline audio...');
+                const response = await fetch('http://localhost:3000/api/baseline-audio');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const audioBlob = await response.blob();
+                console.log('Baseline audio loaded:', {
+                    size: audioBlob.size,
+                    type: audioBlob.type
+                });
+
+                // Test 2: Create audio file
+                const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
+                console.log('Audio file created:', {
+                    name: audioFile.name,
+                    size: audioFile.size,
+                    type: audioFile.type
+                });
+
+                // Test 3: Set up original audio player
+                const originalUrl = URL.createObjectURL(audioBlob);
+                originalAudio.src = originalUrl;
+
+                // Test 4: Process audio
+                console.log('Step 4: Processing audio...');
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const arrayBuffer = await audioFile.arrayBuffer();
+                console.log('Array buffer loaded:', arrayBuffer.byteLength);
+                
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                console.log('Audio buffer decoded:', {
+                    duration: audioBuffer.duration,
+                    sampleRate: audioBuffer.sampleRate,
+                    numberOfChannels: audioBuffer.numberOfChannels,
+                    length: audioBuffer.length
+                });
+
+                // Test 5: Simple processing (just copy for now)
+                const processedBuffer = audioContext.createBuffer(
+                    audioBuffer.numberOfChannels,
+                    audioBuffer.length,
+                    audioBuffer.sampleRate
+                );
+
+                for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+                    const originalData = audioBuffer.getChannelData(channel);
+                    const newData = processedBuffer.getChannelData(channel);
+                    newData.set(originalData);
+                }
+
+                // Test 6: Convert to WAV
+                const wavBuffer = audioBufferToWav(processedBuffer);
+                const processedBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                
+                // Test 7: Set up processed audio player
+                const processedUrl = URL.createObjectURL(processedBlob);
+                processedAudio.src = processedUrl;
+
+                // Display results
+                resultsDiv.innerHTML = `
+                    <div class="result">
+                        <h4>✅ Baseline Audio Test Results:</h4>
+                        <p><strong>Original Audio:</strong></p>
+                        <ul>
+                            <li>Size: ${audioBlob.size.toLocaleString()} bytes</li>
+                            <li>Type: ${audioBlob.type}</li>
+                            <li>Duration: ${audioBuffer.duration.toFixed(2)}s</li>
+                            <li>Sample Rate: ${audioBuffer.sampleRate} Hz</li>
+                            <li>Channels: ${audioBuffer.numberOfChannels}</li>
+                        </ul>
+                        <p><strong>Processed Audio:</strong></p>
+                        <ul>
+                            <li>Size: ${processedBlob.size.toLocaleString()} bytes</li>
+                            <li>Duration: ${processedBuffer.duration.toFixed(2)}s</li>
+                        </ul>
+                        <p><strong>Status:</strong> ✅ Audio loaded and processed successfully!</p>
+                    </div>
+                `;
+
+                console.log('Test completed successfully!');
+
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="result" style="background: #ffe6e6; border-left: 4px solid #f44336;">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function audioBufferToWav(buffer) {
+            const length = buffer.length;
+            const numberOfChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+            const view = new DataView(arrayBuffer);
+
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+            view.setUint16(32, numberOfChannels * 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, length * numberOfChannels * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < length; i++) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+
+            return arrayBuffer;
+        }
+    </script>
+</body>
+</html>

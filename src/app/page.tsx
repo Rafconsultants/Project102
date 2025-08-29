@@ -146,17 +146,31 @@ export default function Home() {
     try {
       console.log(`Starting audio processing for BPM: ${bpm}`);
       
-      // Load the baseline audio file
+      // Test 1: Check if baseline audio endpoint is accessible
+      console.log('Step 1: Testing baseline audio endpoint...');
       const response = await fetch('/api/baseline-audio');
       if (!response.ok) {
-        throw new Error('Failed to load baseline audio');
+        throw new Error(`Failed to load baseline audio: ${response.status} ${response.statusText}`);
       }
       
+      console.log('Step 2: Loading baseline audio blob...');
       const audioBlob = await response.blob();
+      console.log(`Loaded baseline audio blob: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+      
+      if (audioBlob.size === 0) {
+        throw new Error('Baseline audio blob is empty');
+      }
+      
+      console.log('Step 3: Creating audio file...');
       const audioFile = new File([audioBlob], 'baseline-heartbeat.wav', { type: 'audio/wav' });
+      console.log(`Created audio file: ${audioFile.name}, size: ${audioFile.size}, type: ${audioFile.type}`);
       
-      console.log(`Loaded baseline audio: ${audioBlob.size} bytes`);
+      // Test 4: Verify audio file is valid
+      if (audioFile.size === 0) {
+        throw new Error('Audio file is empty');
+      }
       
+      console.log('Step 4: Processing audio...');
       // Process the audio with the target BPM and 8-second duration
       const options: AudioProcessingOptions = {
         bpm: bpm,
@@ -194,9 +208,18 @@ export default function Home() {
       console.log(`Base Tempo Ratio: ${baseTempoRatio}, Enhanced: ${enhancedTempoRatio}`);
       console.log(`Speed Change: ${speedChange}`);
       console.log(`Processed blob size: ${processedBlob.size} bytes`);
+      
+      // Test 5: Verify processed audio
+      if (processedBlob.size === 0) {
+        throw new Error('Processed audio blob is empty');
+      }
+      
+      console.log('✅ Audio processing completed successfully!');
+      
     } catch (error) {
       console.error('Error processing audio:', error);
-      alert('Failed to process audio. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to process audio: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
