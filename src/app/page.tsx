@@ -429,7 +429,7 @@ export default function Home() {
                       Continue to Generate
                     </button>
                   </div>
-                </div>
+        </div>
               )}
 
               <div className="mt-4 text-center">

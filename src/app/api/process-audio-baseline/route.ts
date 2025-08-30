@@ -73,14 +73,29 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
     const bitsPerSample = audioBuffer.readUInt16LE(34);
     const channels = audioBuffer.readUInt16LE(22);
     
-    // Calculate new sample rate based on speed factor
+    // Get the original audio data (skip the 44-byte WAV header)
+    const originalDataSize = audioBuffer.readUInt32LE(40);
+    const originalSamples = originalDataSize / (channels * bitsPerSample / 8);
+    const originalDuration = originalSamples / sampleRate;
+    
+    // Calculate target duration (8 seconds)
+    const targetDuration = 8;
+    
+    // Calculate how many times we need to repeat the original audio to reach 8 seconds
+    const repeatCount = Math.ceil(targetDuration / originalDuration);
+    
+    // Calculate new sample rate to maintain the target BPM
     const newSampleRate = Math.round(sampleRate * speedFactor);
     
-    // Create new buffer with same size as original
-    const newBuffer = Buffer.alloc(audioBuffer.length);
+    // Calculate new data size for 8 seconds (use original sample rate for size calculation)
+    const newSamples = Math.round(sampleRate * targetDuration);
+    const newDataSize = Math.round(newSamples * channels * bitsPerSample / 8);
     
-    // Copy the original audio data
-    audioBuffer.copy(newBuffer);
+    // Create new buffer with proper size for 8 seconds
+    const newBuffer = Buffer.alloc(44 + newDataSize);
+    
+    // Copy WAV header from original
+    audioBuffer.copy(newBuffer, 0, 0, 44);
     
     // Update the sample rate in the WAV header
     newBuffer.writeUInt32LE(newSampleRate, 24);
@@ -96,7 +111,29 @@ function adjustAudioSpeed(audioBuffer: Buffer, speedFactor: number): Buffer {
       newBuffer.writeUInt32LE(Math.round(newByteRate), 28);
     }
     
-    console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Original duration maintained`);
+    // Update the data chunk size
+    newBuffer.writeUInt32LE(newDataSize, 40);
+    
+    // Update the file size in RIFF header
+    newBuffer.writeUInt32LE(36 + newDataSize, 4);
+    
+    // Fill the new buffer with repeated audio data
+    let offset = 44;
+    for (let i = 0; i < repeatCount; i++) {
+      const copySize = Math.min(originalDataSize, newDataSize - (offset - 44));
+      if (copySize > 0) {
+        audioBuffer.copy(newBuffer, offset, 44, 44 + copySize);
+        offset += copySize;
+      }
+    }
+    
+    // If we still need more data to reach 8 seconds, pad with silence
+    while (offset < 44 + newDataSize) {
+      newBuffer.writeUInt16LE(0, offset);
+      offset += 2;
+    }
+    
+    console.log(`BPM Adjustment: ${BASELINE_BPM} → ${Math.round(BASELINE_BPM * speedFactor)} BPM (${speedFactor.toFixed(2)}x speed), Duration: ${targetDuration}s`);
     
     return newBuffer;
     
